@@ -1,15 +1,40 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+// Arquivo: build.gradle (Nível do Projeto/Raiz)
+
 buildscript {
     repositories {
-        jcenter()
+        google()
+        mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.5.0'
+        // OBS: Usar o bloco 'plugins' na raiz é o método moderno,
+        // mas em projetos mais antigos, a declaração de plugins pode
+        // ser feita aqui (buildscript dependencies).
+
+        // Se você não usa o bloco 'plugins' na raiz, use esta forma:
+        classpath "com.android.tools.build:gradle:8.1.1"
+
+        // 💥 CORREÇÃO PRINCIPAL: Adicione a versão do Kotlin Plugin
+        // Use uma versão compatível (e.g., 1.9.0 para AGP 8.1.1)
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0"
     }
 }
 
+// Configuração dos repositórios para todas as dependências do projeto
 allprojects {
     repositories {
-        jcenter()
+        google()
+        mavenCentral()
     }
+}
+// Este bloco 'plugins' é a forma mais moderna, mas se você já tem um
+// bloco 'buildscript' acima, pode ser redundante/conflitante.
+/*
+plugins {
+    id 'com.android.application' version '8.1.1' apply false
+    id 'org.jetbrains.kotlin.android' version '1.9.0' apply false
+}
+*/
+
+tasks.register('clean', Delete) {
+    delete rootProject.buildDir
 }

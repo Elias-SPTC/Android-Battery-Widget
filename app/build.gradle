@@ -1,27 +1,63 @@
-apply plugin: 'com.android.application'
+// Arquivo: app/build.gradle (Nível do Módulo :app)
+
+// As declarações de 'plugins' aqui APENAS chamam os plugins definidos na raiz.
+plugins {
+    id 'com.android.application'
+
+    // 💥 CORREÇÃO: Plugin Kotlin.
+    id 'kotlin-android'
+}
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion "21.1.1"
+    // 💥 CORREÇÃO PRINCIPAL 1: Definição obrigatória de namespace para AGP 8.x
+    namespace 'com.em.batterywidget'
+
+    // RECOMENDADO: Compile SDK para a versão mais recente
+    compileSdk 34 // Use a API mais recente para compatibilidade com AGP 8.x
 
     defaultConfig {
         applicationId "com.em.batterywidget"
-        minSdkVersion 8
-        targetSdkVersion 21
+
+        minSdk 21     // Mantenha o mínimo ou ajuste
+        targetSdk 34  // Deve ser o mesmo que compileSdk
+
         versionCode 1
         versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+
+    // 💥 CORREÇÃO PRINCIPAL 2: Configuração de compatibilidade Java 17 (Necessária para Gradle 8.x)
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    // Necessário se você usa Kotlin:
+    kotlinOptions {
+        jvmTarget = '17'
     }
 }
 
 dependencies {
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:21.0.0'
-    compile files('libs/achartengine-1.0.0.jar')
+    // ATUALIZADO: Dependências para versões modernas (se aplicável ao seu projeto)
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.10.0'
+
+    // 💥 CORREÇÃO PRINCIPAL PARA ACHARTENGINE:
+    // Esta linha diz ao Gradle para incluir todos os arquivos JAR que estão na pasta 'app/libs'.
+    // O arquivo JAR do AChartEngine (ex: achartengine-1.2.0.jar) DEVE estar nessa pasta.
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Dependências de Teste
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }

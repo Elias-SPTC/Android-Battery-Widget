@@ -1,48 +1,52 @@
-/*
- *  Copyright 2015 Erkan Molla
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 package com.em.batterywidget;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
+/**
+ * Gerenciador de SharedPreferences. Uso de 'apply()' para gravação assíncrona.
+ */
 public class Preferences {
 
     private SharedPreferences sharedPreferences;
 
     public Preferences(String preference, Context context) {
+        // Usar Context.getApplicationContext() pode ajudar na consistência, mas Context.MODE_PRIVATE é seguro.
         sharedPreferences = context.getSharedPreferences(preference, Context.MODE_PRIVATE);
     }
 
+    /**
+     * Define um valor inteiro de forma assíncrona.
+     * @param key Chave da preferência.
+     * @param value Valor inteiro a ser salvo.
+     */
     public void setValue(String key, int value) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt(key, value);
-        editor.commit();
+        // CRÍTICO: Substituído commit() por apply() para gravação assíncrona (evita travamento da UI)
+        editor.apply();
     }
 
+    /**
+     * Define um valor booleano de forma assíncrona.
+     * @param key Chave da preferência.
+     * @param value Valor booleano a ser salvo.
+     */
     public void setValue(String key, boolean value) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(key, value);
-        editor.commit();
+        editor.apply();
     }
 
+    /**
+     * Define um valor string de forma assíncrona.
+     * @param key Chave da preferência.
+     * @param value Valor string a ser salvo.
+     */
     public void setValue(String key, String value) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(key, value);
-        editor.commit();
+        editor.apply();
     }
 
     public int getValue(String key, int value) {

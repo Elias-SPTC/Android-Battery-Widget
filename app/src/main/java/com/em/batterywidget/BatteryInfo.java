@@ -1,17 +1,17 @@
 /*
- *  Copyright 2015 Erkan Molla
+ * Copyright 2015 Erkan Molla
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.em.batterywidget;
@@ -19,8 +19,14 @@ package com.em.batterywidget;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.BatteryManager;
+import android.util.Log;
 
+/**
+ * Stores and manages battery status information.
+ */
 public class BatteryInfo {
+
+    private static final String TAG = BatteryInfo.class.getSimpleName();
 
     public static final String EXTRA_STATUS = BatteryManager.EXTRA_STATUS;
     public static final String EXTRA_HEALTH = BatteryManager.EXTRA_HEALTH;
@@ -45,6 +51,7 @@ public class BatteryInfo {
     private String technology;
 
     private BatteryInfo() {
+        // Private constructor for internal or controlled object creation
     }
 
     public BatteryInfo(final Intent intent) {
@@ -86,6 +93,11 @@ public class BatteryInfo {
         intent.putExtra(EXTRA_TECHNOLOGY, technology);
     }
 
+    /**
+     * Saves the battery info to SharedPreferences.
+     * IMPORTANT: Replaced commit() with apply() for non-blocking disk write.
+     * @param sharedPreferences The SharedPreferences instance.
+     */
     public void saveToSharedPreferences(final SharedPreferences sharedPreferences) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt(EXTRA_STATUS, status);
@@ -98,7 +110,9 @@ public class BatteryInfo {
         editor.putInt(EXTRA_VOLTAGE, voltage);
         editor.putInt(EXTRA_TEMPERATURE, temperature);
         editor.putString(EXTRA_TECHNOLOGY, technology);
-        editor.commit();
+        // Use apply() for asynchronous saving (non-blocking UI thread)
+        editor.apply();
+        Log.d(TAG, "BatteryInfo saved to SharedPreferences asynchronously.");
     }
 
     public int getStatus() {

@@ -1,33 +1,30 @@
-/*
- *  Copyright 2015 Erkan Molla
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 package com.em.batterywidget;
 
 import java.util.Date;
 
-public class DatabaseEntry {
+/**
+ * Representa uma entrada de histórico do nível da bateria, garantindo imutabilidade.
+ */
+public final class DatabaseEntry {
 
-    private long time;
-    private int level;
+    private final long time;
+    private final int level;
 
+    /**
+     * Construtor principal. Cria uma nova entrada com o timestamp atual.
+     * @param level O nível de bateria (0-100).
+     */
     public DatabaseEntry(int level) {
-        this.time = new Date().getTime();
+        // Uso de System.currentTimeMillis() é mais eficiente que new Date().getTime()
+        this.time = System.currentTimeMillis();
         this.level = level;
     }
 
+    /**
+     * Construtor para recriar uma entrada a partir de dados lidos da base de dados.
+     * @param time O timestamp (em milissegundos) do registo.
+     * @param level O nível de bateria (0-100).
+     */
     public DatabaseEntry(long time, int level) {
         this.time = time;
         this.level = level;
