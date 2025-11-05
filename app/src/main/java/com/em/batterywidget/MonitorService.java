@@ -1,19 +1,3 @@
-/*
- * Copyright 2015 Erkan Molla
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.em.batterywidget;
 
 import android.app.Notification;
@@ -33,7 +17,8 @@ import androidx.core.app.NotificationCompat; // Requires Androidx dependencies
 
 /**
  * This service is used to monitor the battery information.
- * CRITICAL FIX: Updated to run as a Foreground Service for compatibility with modern Android OS (API 26+).
+ * CRITICAL FIX: The BroadcastReceiver now correctly uses UpdateService.enqueueWork()
+ * instead of context.startService() to ensure updates are processed by the JobIntentService.
  */
 public class MonitorService extends Service {
 
@@ -45,20 +30,35 @@ public class MonitorService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
+
+            // O Intent de atualização será enfileirado no UpdateService
+            Intent updateIntent = new Intent(context, UpdateService.class);
+
             if (Intent.ACTION_BATTERY_CHANGED.equals(action)) {
+
+                // 1. Deserializa os dados da bateria do Intent do sistema
                 BatteryInfo batteryInfo = new BatteryInfo(intent);
-                Intent updateIntent = new Intent(context, UpdateService.class);
                 updateIntent.setAction(UpdateService.ACTION_BATTERY_CHANGED);
+
+                // 2. Serializa todos os dados para o Intent do serviço.
                 batteryInfo.saveToIntent(updateIntent);
-                context.startService(updateIntent);
+
+                // 3. Utiliza enqueueWork para iniciar o JobIntentService de forma robusta.
+                UpdateService.enqueueWork(context, updateIntent);
+                Log.d(TAG, "ACTION_BATTERY_CHANGED recebido e enfileirado para UpdateService.");
+
             } else if (Intent.ACTION_BATTERY_LOW.equals(action)) {
-                Intent updateIntent = new Intent(context, UpdateService.class);
                 updateIntent.setAction(UpdateService.ACTION_BATTERY_LOW);
-                context.startService(updateIntent);
+                // Utiliza enqueueWork
+                UpdateService.enqueueWork(context, updateIntent);
+                Log.d(TAG, "ACTION_BATTERY_LOW recebido e enfileirado para UpdateService.");
+
+
             } else if (Intent.ACTION_BATTERY_OKAY.equals(action)) {
-                Intent updateIntent = new Intent(context, UpdateService.class);
                 updateIntent.setAction(UpdateService.ACTION_BATTERY_OKAY);
-                context.startService(updateIntent);
+                // Utiliza enqueueWork
+                UpdateService.enqueueWork(context, updateIntent);
+                Log.d(TAG, "ACTION_BATTERY_OKAY recebido e enfileirado para UpdateService.");
             }
         }
     };
@@ -99,8 +99,6 @@ public class MonitorService extends Service {
 
     /**
      * Creates the persistent notification required for a Foreground Service (API 26+).
-     * NOTE: This assumes you have 'R.string.app_name', 'R.drawable.ic_stat_battery'
-     * and a main Activity (like WidgetActivity) defined.
      * @return The Notification object.
      */
     private Notification createNotification() {
@@ -123,11 +121,10 @@ public class MonitorService extends Service {
                 PendingIntent.FLAG_IMMUTABLE); // Use FLAG_IMMUTABLE for security
 
         // Build the notification
-        // Note: You would replace R.string.app_name and R.drawable.ic_stat_battery with actual resource IDs
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Monitoramento de Bateria Ativo") // Placeholder for R.string.app_name
+                .setContentTitle("Monitoramento de Bateria Ativo")
                 .setContentText("O widget de bateria está monitorando seu dispositivo.")
-                .setSmallIcon(android.R.drawable.ic_lock_power_off) // Generic Android icon, replace with your icon
+                .setSmallIcon(R.drawable.ic_launcher) // Usando o ícone do app em vez de um genérico
                 .setContentIntent(pendingIntent)
                 .setTicker("Monitoramento de Bateria")
                 .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -137,8 +134,14 @@ public class MonitorService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(broadcastReceiver);
-        // If it was a foreground service, stop it gracefully.
+        // Garantir que o receiver é desregistado
+        try {
+            unregisterReceiver(broadcastReceiver);
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, "Erro ao desregistar o Receiver: " + e.getMessage());
+        }
+
+        // Se foi um serviço em primeiro plano, pare-o graciosamente.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             stopForeground(true);
         }
@@ -153,13 +156,11 @@ public class MonitorService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // Since we are running as a foreground service, ensure we call startForeground here
-        // for devices before API 26 (though the call in onCreate covers 26+).
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             startForeground(NOTIFICATION_ID, createNotification());
         }
 
-        // We want this service to continue running until it is explicitly
-        // stopped (by the last widget being removed), so return sticky.
+        // Retornamos sticky para que o serviço continue a correr até ser explicitamente parado.
         return Service.START_STICKY;
     }
 

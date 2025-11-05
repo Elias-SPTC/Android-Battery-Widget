@@ -37,6 +37,12 @@
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="false" />
 
+        <service
+            android:name="com.em.batterywidget.MonitorService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"/>
+
         <receiver android:name=".BootReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BATTERY_CHANGED" />
@@ -44,13 +50,7 @@
             </intent-filter>
         </receiver>
 
-        <service
-            android:name="com.em.batterywidget.MonitorService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="dataSync"/>
-
-        <receiver android:name=".BatteryWidgetProvider"
+        <receiver android:name=".BatteryWidget"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -58,6 +58,15 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/battery_widget_info" />
+        </receiver>
+
+        <receiver android:name=".BatteryGraphWidget"
+            android:exported="true"> <intent-filter>
+            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/battery_graph_widget_info" />
         </receiver>
 
     </application>

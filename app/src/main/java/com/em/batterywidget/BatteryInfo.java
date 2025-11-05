@@ -1,19 +1,3 @@
-/*
- * Copyright 2015 Erkan Molla
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.em.batterywidget;
 
 import android.content.Intent;
@@ -21,182 +5,130 @@ import android.content.SharedPreferences;
 import android.os.BatteryManager;
 import android.util.Log;
 
-/**
- * Stores and manages battery status information.
- */
 public class BatteryInfo {
 
     private static final String TAG = BatteryInfo.class.getSimpleName();
 
-    public static final String EXTRA_STATUS = BatteryManager.EXTRA_STATUS;
-    public static final String EXTRA_HEALTH = BatteryManager.EXTRA_HEALTH;
-    public static final String EXTRA_PRESENT = BatteryManager.EXTRA_PRESENT;
-    public static final String EXTRA_LEVEL = BatteryManager.EXTRA_LEVEL;
-    public static final String EXTRA_SCALE = BatteryManager.EXTRA_SCALE;
-    public static final String EXTRA_ICON_SMALL = BatteryManager.EXTRA_ICON_SMALL;
-    public static final String EXTRA_PLUGGED = BatteryManager.EXTRA_PLUGGED;
-    public static final String EXTRA_VOLTAGE = BatteryManager.EXTRA_VOLTAGE;
-    public static final String EXTRA_TEMPERATURE = BatteryManager.EXTRA_TEMPERATURE;
-    public static final String EXTRA_TECHNOLOGY = BatteryManager.EXTRA_TECHNOLOGY;
+    // Constantes Padrão
+    private static final int DEFAULT_LEVEL = 50;
+    private static final int DEFAULT_STATUS = BatteryManager.BATTERY_STATUS_UNKNOWN;
+    private static final int DEFAULT_PLUGGED = 0;
 
-    private int status;
-    private int health;
-    private boolean present;
+    // Campos de dados da bateria
     private int level;
-    private int scale;
-    private int iconSmallResId;
+    private int status;
     private int plugged;
+    private int scale;
     private int voltage;
     private int temperature;
     private String technology;
+    private int health;
 
-    private BatteryInfo() {
-        // Private constructor for internal or controlled object creation
+    // Chaves para SharedPreferences (mantido mínimo para fallback do widget)
+    private static final String PREF_LEVEL = "battery_level";
+    private static final String PREF_STATUS = "battery_status";
+    private static final String PREF_PLUGGED = "battery_plugged";
+
+    // Construtor 1: Usado para Fallback do Widget (lê do SharedPreferences)
+    public BatteryInfo(SharedPreferences prefs) {
+        this.level = prefs.getInt(PREF_LEVEL, DEFAULT_LEVEL);
+        this.status = prefs.getInt(PREF_STATUS, DEFAULT_STATUS);
+        this.plugged = prefs.getInt(PREF_PLUGGED, DEFAULT_PLUGGED);
+
+        // Valores default para campos não salvos no SP
+        this.scale = 100;
+        this.voltage = -1;
+        this.temperature = -1;
+        this.technology = "N/A";
+        this.health = BatteryManager.BATTERY_HEALTH_UNKNOWN;
     }
 
-    public BatteryInfo(final Intent intent) {
-        status = intent.getIntExtra(EXTRA_STATUS, 0);
-        health = intent.getIntExtra(EXTRA_HEALTH, 0);
-        present = intent.getBooleanExtra(EXTRA_PRESENT, false);
-        level = intent.getIntExtra(EXTRA_LEVEL, 0);
-        scale = intent.getIntExtra(EXTRA_SCALE, 0);
-        iconSmallResId = intent.getIntExtra(EXTRA_ICON_SMALL, 0);
-        plugged = intent.getIntExtra(EXTRA_PLUGGED, 0);
-        voltage = intent.getIntExtra(EXTRA_VOLTAGE, 0);
-        temperature = intent.getIntExtra(EXTRA_TEMPERATURE, 0);
-        technology = intent.getStringExtra(EXTRA_TECHNOLOGY);
+    // Construtor 2: Usado para ler dados do sistema (ACTION_BATTERY_CHANGED Intent)
+    public BatteryInfo(Intent intent) {
+
+        // --- CORREÇÃO CRÍTICA PARA PERCENTUAL ERRADO ---
+        this.scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
+        int rawLevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, DEFAULT_LEVEL);
+
+        if (this.scale > 0) {
+            this.level = (int) ((rawLevel / (float) this.scale) * 100);
+            if (this.level < 0) this.level = 0;
+            if (this.level > 100) this.level = 100;
+        } else {
+            this.level = DEFAULT_LEVEL;
+        }
+
+        // Campos gerais
+        this.status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, DEFAULT_STATUS);
+        this.plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, DEFAULT_PLUGGED);
+
+        // --- Adicionado campos para resolver erros de compilação em WidgetActivity.java ---
+        this.voltage = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
+        this.temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+        this.technology = intent.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY);
+        if (this.technology == null) this.technology = "N/A";
+        this.health = intent.getIntExtra(BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_UNKNOWN);
     }
 
-    public BatteryInfo(final SharedPreferences sharedPreferences) {
-        status = sharedPreferences.getInt(EXTRA_STATUS, 0);
-        health = sharedPreferences.getInt(EXTRA_HEALTH, 0);
-        present = sharedPreferences.getBoolean(EXTRA_PRESENT, false);
-        level = sharedPreferences.getInt(EXTRA_LEVEL, 0);
-        scale = sharedPreferences.getInt(EXTRA_SCALE, 0);
-        iconSmallResId = sharedPreferences.getInt(EXTRA_ICON_SMALL, 0);
-        plugged = sharedPreferences.getInt(EXTRA_PLUGGED, 0);
-        voltage = sharedPreferences.getInt(EXTRA_VOLTAGE, 0);
-        temperature = sharedPreferences.getInt(EXTRA_TEMPERATURE, 0);
-        technology = sharedPreferences.getString(EXTRA_TECHNOLOGY, "Unknown");
+    // --- MÉTODOS DE MANIPULAÇÃO DE DADOS ---
+
+    // CRÍTICO: Método para resolver o erro em MonitorService.java
+    public void saveToIntent(Intent intent) {
+        intent.putExtra(BatteryManager.EXTRA_LEVEL, level); // Usando o nível calculado (0-100)
+        intent.putExtra(BatteryManager.EXTRA_SCALE, scale);
+        intent.putExtra(BatteryManager.EXTRA_STATUS, status);
+        intent.putExtra(BatteryManager.EXTRA_PLUGGED, plugged);
+        intent.putExtra(BatteryManager.EXTRA_VOLTAGE, voltage);
+        intent.putExtra(BatteryManager.EXTRA_TEMPERATURE, temperature);
+        intent.putExtra(BatteryManager.EXTRA_TECHNOLOGY, technology);
+        intent.putExtra(BatteryManager.EXTRA_HEALTH, health);
+        Log.d(TAG, "BatteryInfo salvo no Intent para UpdateService.");
     }
 
-    public void saveToIntent(final Intent intent) {
-        intent.putExtra(EXTRA_STATUS, status);
-        intent.putExtra(EXTRA_HEALTH, health);
-        intent.putExtra(EXTRA_PRESENT, present);
-        intent.putExtra(EXTRA_LEVEL, level);
-        intent.putExtra(EXTRA_SCALE, scale);
-        intent.putExtra(EXTRA_ICON_SMALL, iconSmallResId);
-        intent.putExtra(EXTRA_PLUGGED, plugged);
-        intent.putExtra(EXTRA_VOLTAGE, voltage);
-        intent.putExtra(EXTRA_TEMPERATURE, temperature);
-        intent.putExtra(EXTRA_TECHNOLOGY, technology);
+    public void saveToSharedPreferences(SharedPreferences prefs) {
+        prefs.edit()
+                .putInt(PREF_LEVEL, this.level)
+                .putInt(PREF_STATUS, this.status)
+                .putInt(PREF_PLUGGED, this.plugged)
+                .apply();
+        Log.d(TAG, "BatteryInfo salvo no SP: " + this.level + "%, Status: " + this.status);
     }
 
-    /**
-     * Saves the battery info to SharedPreferences.
-     * IMPORTANT: Replaced commit() with apply() for non-blocking disk write.
-     * @param sharedPreferences The SharedPreferences instance.
-     */
-    public void saveToSharedPreferences(final SharedPreferences sharedPreferences) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt(EXTRA_STATUS, status);
-        editor.putInt(EXTRA_HEALTH, health);
-        editor.putBoolean(EXTRA_PRESENT, present);
-        editor.putInt(EXTRA_LEVEL, level);
-        editor.putInt(EXTRA_SCALE, scale);
-        editor.putInt(EXTRA_ICON_SMALL, iconSmallResId);
-        editor.putInt(EXTRA_PLUGGED, plugged);
-        editor.putInt(EXTRA_VOLTAGE, voltage);
-        editor.putInt(EXTRA_TEMPERATURE, temperature);
-        editor.putString(EXTRA_TECHNOLOGY, technology);
-        // Use apply() for asynchronous saving (non-blocking UI thread)
-        editor.apply();
-        Log.d(TAG, "BatteryInfo saved to SharedPreferences asynchronously.");
+    // --- GETTERS (RESOLVEM ERROS EM WidgetActivity.java) ---
+    public int getLevel() {
+        return level;
     }
 
     public int getStatus() {
         return status;
     }
 
-    public void setStatus(int status) {
-        this.status = status;
-    }
-
-    public boolean isCharging() {
-        return (this.status == BatteryManager.BATTERY_STATUS_CHARGING);
-    }
-
-    public int getHealth() {
-        return health;
-    }
-
-    public void setHealth(int health) {
-        this.health = health;
-    }
-
-    public boolean isPresent() {
-        return present;
-    }
-
-    public void setPresent(boolean present) {
-        this.present = present;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public void setLevel(int level) {
-        this.level = level;
-    }
-
-    public int getScale() {
-        return scale;
-    }
-
-    public void setScale(int scale) {
-        this.scale = scale;
-    }
-
-    public int getIconSmallResId() {
-        return iconSmallResId;
-    }
-
-    public void setIconSmallResId(int iconSmallResId) {
-        this.iconSmallResId = iconSmallResId;
-    }
-
     public int getPlugged() {
         return plugged;
     }
 
-    public void setPlugged(int plugged) {
-        this.plugged = plugged;
+    public boolean isCharging() {
+        return status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
+    }
+
+    // Getters adicionados:
+    public int getScale() {
+        return scale;
     }
 
     public int getVoltage() {
         return voltage;
     }
 
-    public void setVoltage(int voltage) {
-        this.voltage = voltage;
-    }
-
     public int getTemperature() {
         return temperature;
-    }
-
-    public void setTemperature(int temperature) {
-        this.temperature = temperature;
     }
 
     public String getTechnology() {
         return technology;
     }
 
-    public void setTechnology(String technology) {
-        this.technology = technology;
+    public int getHealth() {
+        return health;
     }
-
 }
