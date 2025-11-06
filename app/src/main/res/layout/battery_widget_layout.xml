@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+Layout principal para o BatteryWidget (o widget que mostra a pilha/status atual).
+Este layout é simples e focado no nível de bateria em destaque.
+-->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp"
+    android:background="@drawable/widget_background">
+
+    <!--
+        ImageView para desenhar a pilha de bateria.
+        No BatteryRenderer, este ImageView será atualizado com um Bitmap
+        que representa o estado da bateria (nível, cor, carregando).
+    -->
+    <ImageView
+        android:id="@+id/battery_image_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:contentDescription="Ícone da bateria"
+        android:scaleType="fitCenter" />
+
+    <!--
+        TextView para exibir o nível de porcentagem sobre a pilha.
+        O BatteryRenderer atualizará este texto.
+    -->
+    <TextView
+        android:id="@+id/battery_level_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="50%"
+        android:textSize="24sp"
+        android:textColor="@android:color/white"
+        android:textStyle="bold" />
+
+    <!--
+        TextView pequeno para informações adicionais (status de carregamento ou temperatura).
+    -->
+    <TextView
+        android:id="@+id/battery_status_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="4dp"
+        android:text="Carregando"
+        android:textSize="10sp"
+        android:textColor="@android:color/white" />
+
+
+</FrameLayout>

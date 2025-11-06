@@ -1,98 +1,63 @@
-package com.em.batterywidget;
+package com.em.batterywidget
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Representa uma única entrada de dados de bateria armazenada na base de dados (SQLite).
+ *
+ * Utiliza uma data class do Kotlin para concisão, fornecendo automaticamente:
+ * - Getters para todas as propriedades (val).
+ * - Métodos equals(), hashCode() e toString() baseados nas propriedades.
  */
-public class DatabaseEntry {
-    // Colunas da base de dados (correspondendo aos nomes de coluna em Database.java)
-    public static final String KEY_TIME = "time_stamp";
-    public static final String KEY_LEVEL = "battery_level";
-    public static final String KEY_STATUS = "status";
-    public static final String KEY_PLUGGED = "plugged";
-    public static final String KEY_VOLTAGE = "voltage"; // NOVO: Tensão em mV
-    public static final String KEY_HEALTH = "health";   // NOVO: Código de saúde
-
-    private long timestamp;
-    private int level;
-    private int status;
-    private int plugged;
-    private int voltage; // NOVO
-    private int health;  // NOVO
+data class DatabaseEntry(
+    val timestamp: Long = System.currentTimeMillis(), // O tempo em milissegundos
+    val level: Int = 0,               // Nível da bateria (0-100)
+    val status: Int = 0,              // Código de status (ex: BATTERY_STATUS_CHARGING)
+    val plugged: Int = 0,             // Código de plug (ex: BATTERY_PLUGGED_USB)
+    val voltage: Int = 0,             // Tensão em mV
+    val health: Int = 1               // Código de saúde (ex: BATTERY_HEALTH_UNKNOWN)
+) {
+    // --- Construtores Auxiliares ---
 
     /**
-     * Construtor principal usado para construir objetos a partir da base de dados ou para inserção completa.
-     * Inclui os campos voltage e health.
+     * Construtor auxiliar para inserção de dados de demonstração ou casos onde só o nível é importante.
+     * Assume defaults: status=0, plugged=0, voltage=0, health=1 (BATTERY_HEALTH_UNKNOWN).
      */
-    public DatabaseEntry(long timestamp, int level, int status, int plugged, int voltage, int health) {
-        this.timestamp = timestamp;
-        this.level = level;
-        this.status = status;
-        this.plugged = plugged;
-        this.voltage = voltage;
-        this.health = health;
+    constructor(timestamp: Long, level: Int) : this(timestamp, level, 0, 0, 0, 1)
+
+    // --- Métodos de Conveniência (Properties calculadas) ---
+
+    fun getTime(): Long {
+        return timestamp // Alias para compatibilidade, mas 'timestamp' deve ser usado
     }
 
-    /**
-     * Construtor auxiliar (para inserção de dados de demonstração no Database.java,
-     * onde apenas nível e timestamp são fornecidos, assumindo status, plugged, voltage, health como 0 e HEALTH_UNKNOWN (1)).
-     */
-    public DatabaseEntry(long timestamp, int level) {
-        // Assume defaults: 0V, HEALTH_UNKNOWN (código 1)
-        this(timestamp, level, 0, 0, 0, 1);
+    fun getFormattedTime(): String {
+        val sdf = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault())
+        return sdf.format(Date(timestamp))
     }
 
-    /**
-     * Construtor de fallback.
-     */
-    public DatabaseEntry() {
-        this(System.currentTimeMillis(), 0, 0, 0, 0, 1);
+    fun isCharging(): Boolean {
+        // Plugged != 0 significa que está conectado a alguma fonte de energia (AC, USB, Wireless)
+        return plugged != 0
     }
 
-    // Getters
-    public long getTimestamp() {
-        return timestamp;
+    // O método toString() é fornecido automaticamente pela data class.
+    // Opcionalmente, pode-se sobrescrever para incluir a formatação extra:
+    override fun toString(): String {
+        return "DatabaseEntry [Time=${getFormattedTime()}, Level=$level%, Tensão=${voltage}mV, Saúde=$health]"
     }
 
-    public long getTime() {
-        return getTimestamp();
-    }
+    // --- Constantes (Companion Object) ---
 
-    public int getLevel() {
-        return level;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public int getPlugged() {
-        return plugged;
-    }
-
-    // NOVO: Getters para Tensão e Saúde
-    public int getVoltage() {
-        return voltage;
-    }
-
-    public int getHealth() {
-        return health;
-    }
-
-    public String getFormattedTime() {
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault());
-        return sdf.format(new Date(timestamp));
-    }
-
-    public boolean isCharging() {
-        return plugged != 0;
-    }
-
-    @Override
-    public String toString() {
-        return "DatabaseEntry [Time=" + getFormattedTime() + ", Level=" + level + "%, Tensão=" + voltage + "mV, Saúde=" + health + "]";
+    companion object {
+        // Colunas da base de dados (são constantes, idealmente em um Companion Object)
+        const val KEY_TIME = "time_stamp"
+        const val KEY_LEVEL = "battery_level"
+        const val KEY_STATUS = "status"
+        const val KEY_PLUGGED = "plugged"
+        const val KEY_VOLTAGE = "voltage"
+        const val KEY_HEALTH = "health"
     }
 }

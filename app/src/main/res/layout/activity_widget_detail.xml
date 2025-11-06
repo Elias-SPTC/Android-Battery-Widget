@@ -17,9 +17,6 @@
 
     <!-- Strings required by Kotlin files (MonitorService, WidgetActivity, GraphWidget) -->
 
-    <!-- ADICIONADO: Estava a causar erro de compilação por estar em falta -->
-    <string name="battery_detail_title">Detalhes da Bateria</string>
-
     <!-- Formato para o widget principal -->
     <string name="battery_level_format">%d%%</string>
 
@@ -29,11 +26,15 @@
     <string name="graph_description">Histórico da Bateria (Últimas 24h)</string>
 
     <!-- WidgetActivity Strings -->
+    <!-- Adicionada a string em falta -->
+    <string name="battery_detail_title">Detalhes da Bateria</string>
+
     <string name="activity_title">Detalhes da Bateria</string>
     <string name="activity_title_unavailable">Detalhes da Bateria (Dados Indisponíveis)</string>
 
-    <!-- CORRIGIDO: Agora usa argumentos posicionais (%1$d e %2$d) para evitar o aviso de substituição múltipla. -->
+    <!-- CORREÇÃO: Usando formatação posicional para múltiplos argumentos -->
     <string name="detail_level_format">%1$d%% (Máx: %2$d)</string>
+
     <string name="detail_voltage_format">%.3f V</string>
     <string name="detail_temperature_format">%.1f C</string>
 

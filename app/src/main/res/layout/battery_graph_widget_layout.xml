@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_graph_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="@drawable/widget_background">
+
+    <!-- Área de Exibição Principal do Gráfico -->
+    <ImageView
+        android:id="@+id/iv_battery_graph"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:contentDescription="@string/graph_description"
+        android:scaleType="fitCenter"
+        tools:src="@tools:sample/backgrounds/scenic" />
+
+    <!-- Rodapé de Informações (opcional, para ser populado dinamicamente) -->
+    <TextView
+        android:id="@+id/tv_graph_footer_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textSize="10sp"
+        android:textColor="@android:color/white"
+        android:gravity="center"
+        tools:text="Saúde: Boa | Temp: 25°C | Voltagem: 3.82V" />
+
+</LinearLayout>

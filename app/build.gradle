@@ -51,6 +51,22 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.10.0'
 
+    // -----------------------------------------------------
+    // 💥 CORREÇÕES CRÍTICAS PARA OS ERROS DE COMPILAÇÃO
+    // -----------------------------------------------------
+
+    // WorkManager (resolve os erros 'work', 'OneTimeWorkRequestBuilder', 'Data', 'OutOfQuotaPolicy', 'CoroutineWorker')
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // DataStore (resolve os erros 'datastore', 'DataStore', 'preferencesDataStore', 'intKey', 'stringKey')
+    // A versão 1.0.0 é a estável para preferencesDataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // Coroutines (Necessário para CoroutineWorker e DataStore - versão compatível com Kotlin 1.9.0 e WorkManager)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    // -----------------------------------------------------
+
     // 💥 CORREÇÃO PRINCIPAL PARA ACHARTENGINE:
     // Esta linha diz ao Gradle para incluir todos os arquivos JAR que estão na pasta 'app/libs'.
     // O arquivo JAR do AChartEngine (ex: achartengine-1.2.0.jar) DEVE estar nessa pasta.

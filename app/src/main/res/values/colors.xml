@@ -1,21 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-*  Copyright 2015 Erkan Molla
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
--->
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <!-- Cores Padrão do Android (essenciais para referências em layouts) -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Cores Padrão da Aplicação (Definidas no Tema) -->
+    <color name="colorPrimary">#00796B</color>
+    <color name="colorPrimaryDark">#004D40</color>
+    <color name="colorAccent">#FFC107</color>
+
+    <!-- Cores para o Widget -->
+    <color name="widget_background">#40000000</color> <!-- Transparente Escuro -->
+    <color name="widget_text_color">#FFFFFF</color> <!-- Cor do texto principal -->
+
+    <!-- CORREÇÃO: Esta cor estava a faltar e causava o erro de compilação -->
+    <color name="widget_secondary_text_color">#CCCCCC</color>
+
+    <!-- Cor de separador (Necessária para os estilos DetailSeparatorStyle) -->
+    <color name="separator_color">#BDBDBD</color>
+
+    <!-- Cores do Gráfico (Usadas na lógica de desenho do BatteryGraphWidget) -->
+    <color name="graph_line_color">#4CAF50</color> <!-- Cor da linha principal -->
+    <color name="graph_low_battery_color">#F44336</color> <!-- Vermelho (Para estado crítico) -->
+
+    <!-- Definições mais específicas de estado de bateria para o gráfico: -->
+    <color name="graph_line_good">#4CAF50</color> <!-- Verde -->
+    <color name="graph_line_low">#FF9800</color> <!-- Laranja -->
+    <color name="graph_line_critical">#F44336</color> <!-- Vermelho -->
 </resources>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="@drawable/widget_background">
+
+    <!-- Título do Gráfico -->
+    <TextView
+        android:id="@+id/tv_graph_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/graph_description"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:textColor="@color/widget_text_color"
+        android:layout_marginBottom="4dp" />
+
+    <!-- Status Atual/Último Nível -->
+    <TextView
+        android:id="@+id/tv_graph_status_latest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textColor="@color/widget_secondary_text_color"
+        tools:text="Latest: 85% (Charging)"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Área de Desenho do Gráfico (será um Bitmap no código) -->
+    <ImageView
+        android:id="@+id/iv_graph_canvas"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scaleType="fitXY"
+        android:contentDescription="@string/graph_description" />
+
+</LinearLayout>
