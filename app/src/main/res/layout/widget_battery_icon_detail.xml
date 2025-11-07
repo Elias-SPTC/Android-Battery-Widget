@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+IMPORTANTE: Tag raiz de LAYOUT. Não use <appwidget-provider> aqui!
+Isto resolve o erro 'Unable to parse "android.widget.appwidget-provider"'.
+-->
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <RelativeLayout
+        android:id="@+id/widget_root_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="4dp"
+        android:background="@drawable/widget_background_icon">
+
+        <!-- Seu conteúdo visual real do widget de ícone -->
+        <ImageView
+            android:id="@+id/battery_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_battery_status"
+            android:contentDescription="@string/battery_level"
+            tools:src="@drawable/widget_icon_detail_preview"
+            />
+
+        <!-- Texto que mostra a porcentagem da bateria -->
+        <TextView
+            android:id="@+id/battery_level_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            tools:text="85" />
+
+    </RelativeLayout>
+
+
+</layout>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cores Padrão do Android -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- PALETA DO MATERIAL 3 (Modo Escuro) - Cores que contrastam bem com o fundo escuro -->
+    <!-- PRIMARY: Cor principal escura (Verde mais claro para contraste) -->
+    <color name="color_primary">#4DB6AC</color>
+    <!-- PRIMARY VARIANT: Cor da barra de status (Verde Escuro M2 Original) -->
+    <color name="color_primary_variant">#004D40</color>
+    <!-- ON PRIMARY: Cor do texto/ícones sobre o primário (Preto) -->
+    <color name="color_on_primary">#000000</color>
+
+    <!-- SECONDARY: Cor de destaque escura (Amarelo mais claro) -->
+    <color name="color_secondary">#FFECB3</color>
+    <!-- ON SECONDARY: Cor do texto/ícones sobre o secundário (Preto) -->
+    <color name="color_on_secondary">#000000</color>
+
+    <!-- Aliases M2 para Compatibilidade (Resolvendo Erros de Compilação) -->
+    <color name="colorAccent">@color/color_secondary</color>
+    <color name="colorPrimaryDark">@color/color_primary_variant</color>
+
+    <!-- Cores para o Widget (Adaptadas para o fundo escuro) -->
+    <color name="widget_background">#A0121212</color> <!-- Fundo muito escuro e ligeiramente transparente -->
+    <color name="widget_text_color">#FFFFFFFF</color> <!-- Cor do texto principal (White) -->
+    <color name="widget_secondary_text_color">#9E9E9E</color> <!-- Cor do texto secundário (Grey) -->
+    <color name="separator_color">#424242</color> <!-- Separadores cinza escuro -->
+
+    <!-- Cor específica ausente: Fundo do gráfico (Necessário para evitar erro de compilação) -->
+    <color name="widget_graph_background">#212121</color> <!-- Cinza escuro para fundo do gráfico -->
+
+    <!-- Cores Específicas do Estado da Bateria (Adaptadas para contraste) -->
+    <color name="color_default">#66BB6A</color> <!-- Verde mais claro -->
+    <color name="battery_progress_color">#66BB6A</color>
+    <color name="color_low">#E57373</color> <!-- Vermelho mais claro -->
+    <color name="color_charging">#FFF176</color> <!-- Amarelo Claro -->
+
+    <!-- Aliases de Texto e Gráfico -->
+    <color name="widget_text_primary">@color/widget_text_color</color>
+    <color name="widget_text_secondary">@color/widget_secondary_text_color</color>
+    <color name="graph_line_color">#4CAF50</color>
+    <color name="graph_low_battery_color">#F44336</color>
+    <color name="graph_line_good">#4CAF50</color>
+    <color name="graph_line_low">#FF9800</color>
+    <color name="graph_line_critical">#F44336</color>
+</resources>

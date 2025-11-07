@@ -5,6 +5,7 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
 
     <!-- Widget padding/margins -->
+    <!-- Definido uma única vez. Atualmente em 4dp. Mude para 8dp se preferir. -->
     <dimen name="widget_margin">4dp</dimen>
     <dimen name="widget_padding">8dp</dimen>
     <dimen name="widget_level_text_size">24sp</dimen>

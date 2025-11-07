@@ -1,39 +1,26 @@
 // Arquivo: build.gradle (Nível do Projeto/Raiz)
 
 buildscript {
+    // Repositórios necessários APENAS para buscar os PLUGINS usados abaixo
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        // OBS: Usar o bloco 'plugins' na raiz é o método moderno,
-        // mas em projetos mais antigos, a declaração de plugins pode
-        // ser feita aqui (buildscript dependencies).
-
-        // Se você não usa o bloco 'plugins' na raiz, use esta forma:
+        // Dependência do Android Gradle Plugin
         classpath "com.android.tools.build:gradle:8.1.1"
 
-        // 💥 CORREÇÃO PRINCIPAL: Adicione a versão do Kotlin Plugin
-        // Use uma versão compatível (e.g., 1.9.0 para AGP 8.1.1)
+        // Dependência do Kotlin Gradle Plugin
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0"
+
+        // Dependência do plugin do Google Services
+        // REMOVIDO: classpath 'com.google.gms:google-services:4.4.0' // Isso faz o Gradle procurar o google-services.json
     }
 }
 
-// Configuração dos repositórios para todas as dependências do projeto
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-// Este bloco 'plugins' é a forma mais moderna, mas se você já tem um
-// bloco 'buildscript' acima, pode ser redundante/conflitante.
-/*
-plugins {
-    id 'com.android.application' version '8.1.1' apply false
-    id 'org.jetbrains.kotlin.android' version '1.9.0' apply false
-}
-*/
+// REMOVIDO: O bloco 'allprojects' foi removido porque o Gradle moderno (8.5)
+// espera que todos os repositórios sejam definidos no settings.gradle
+// (Onde você já adicionou google(), mavenCentral() e jitpack.io)
 
 tasks.register('clean', Delete) {
     delete rootProject.buildDir

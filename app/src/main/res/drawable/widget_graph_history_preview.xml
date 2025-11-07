@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="@drawable/widget_background_dark"> <!-- Assumindo um drawable de background -->
+
+    <!-- Título opcional -->
+    <TextView
+        android:id="@+id/graph_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/graph_widget_title"
+        android:textColor="@color/widget_text_primary"
+        android:textSize="12sp"
+        android:layout_gravity="center_horizontal"
+        android:paddingBottom="4dp"/>
+
+    <!-- Área do Gráfico (Aqui seria a sua custom view) -->
+    <com.em.batterywidget.BatteryGraphView
+        android:id="@+id/battery_history_graph"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:contentDescription="@string/battery_graph_description" />
+
+    <!-- Placeholder para o horário da última atualização -->
+    <TextView
+        android:id="@+id/last_updated_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Updated: --:--"
+        android:textColor="@color/widget_text_secondary"
+        android:textSize="10sp"
+        android:layout_gravity="end"/>
+
+</LinearLayout>

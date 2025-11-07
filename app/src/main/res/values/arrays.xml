@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Opções visíveis para o ListPreference de frequência de atualização -->
+    <string-array name="update_frequency_entries">
+        <item>@string/freq_5_minutes</item>
+        <item>@string/freq_15_minutes</item>
+        <item>@string/freq_30_minutes</item>
+        <item>@string/freq_1_hour</item>
+    </string-array>
+
+    <!-- Valores internos (em milissegundos) para o ListPreference de frequência de atualização -->
+    <string-array name="update_frequency_values">
+        <!-- 5 minutos = 300000ms -->
+        <item>300000</item>
+        <!-- 15 minutos = 900000ms -->
+        <item>900000</item>
+        <!-- 30 minutos = 1800000ms -->
+        <item>1800000</item>
+        <!-- 1 hora = 3600000ms -->
+        <item>3600000</item>
+    </string-array>
+</resources>

@@ -2,15 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
-
-    <uses-permission android:name="android.permission.VIBRATE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- PERMISSÕES NECESSÁRIAS -->
+    <!-- 1. Receber as mudanças de bateria. Esta é uma Broadcast Protegida, mas é bom indicá-la. -->
+    <uses-permission android:name="android.permission.BROADCAST_STICKY" />
 
     <application
+        android:name=".BatteryWidgetApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -19,54 +16,46 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BatteryWidget"
-        android:targetSdkVersion="34"
-        tools:targetApi="34">
+        tools:targetApi="31">
 
+        <!-- Atividade Principal (Manteremos como está) -->
         <activity
-            android:name=".WidgetActivity"
-            android:exported="true"
-            android:label="@string/app_name">
+            android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".UpdateService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="false" />
-
-        <service
-            android:name="com.em.batterywidget.MonitorService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="dataSync"/>
-
-        <receiver android:name=".BootReceiver" android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BATTERY_CHANGED" />
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-
-        <receiver android:name=".BatteryWidget"
+        <!-- 1. DECLARAÇÃO DO WIDGET PROVIDER (BatteryAppWidgetProvider) -->
+        <receiver
+            android:name=".widget.BatteryAppWidgetProvider"
             android:exported="false">
             <intent-filter>
+                <!-- Ação padrão para todos os widgets (quando são adicionados/atualizados) -->
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- Nossa ação personalizada para forçar atualizações -->
+                <action android:name="com.example.widget.batterywidget.ACTION_UPDATE_WIDGET" />
             </intent-filter>
+            <!-- Metadados que apontam para o XML de configuração do widget -->
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/battery_widget_info" />
+                android:resource="@xml/battery_app_widget_info" />
         </receiver>
 
-        <receiver android:name=".BatteryGraphWidget"
-            android:exported="true"> <intent-filter>
-            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-        </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/battery_graph_widget_info" />
+
+        <!-- 2. DECLARAÇÃO DO BROADCAST RECEIVER (BatteryBroadcastReceiver) -->
+        <!-- Este receiver é o que escuta as mudanças reais da bateria -->
+        <receiver
+            android:name=".util.BatteryBroadcastReceiver"
+            android:exported="false">
+            <intent-filter>
+                <!-- O sistema de bateria envia esta intenção em qualquer mudança relevante -->
+                <action android:name="android.intent.action.BATTERY_CHANGED" />
+                <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
+                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
+            </intent-filter>
         </receiver>
 
     </application>

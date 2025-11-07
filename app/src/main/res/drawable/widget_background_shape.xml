@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Cor de Fundo: Um cinzento/preto escuro e semitransparente.
+         O código #99000000 significa 60% de opacidade (99 em hex) e preto puro (000000). -->
+    <solid android:color="#99000000" />
+
+    <!-- Cantos Arredondados: 12dp é um raio comum e agradável. -->
+    <corners android:radius="12dp" />
+
+    <!-- Padding Opcional: Para garantir que o conteúdo do widget não toque nas bordas.
+         Isto é útil se o padding no LinearLayout principal não for suficiente,
+         mas muitas vezes o padding do layout é suficiente. -->
+    <!--
+    <padding
+        android:left="4dp"
+        android:top="4dp"
+        android:right="4dp"
+        android:bottom="4dp" />
+    -->
+
+</shape>

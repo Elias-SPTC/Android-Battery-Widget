@@ -4,82 +4,115 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import java.util.Date
 
-// Extensão para aceder ao DataStore de Preferências
-// Define o DataStore a nível de aplicação com o nome "battery_history_prefs"
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "battery_history_prefs")
+// Define o DataStore singleton para preferências, nomeado "battery_settings"
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "battery_settings")
 
 /**
- * Gerencia a leitura e escrita do histórico de bateria usando DataStore.
- * Armazena um registro simples do estado atual da bateria (nível e status de carregamento)
- * na hora mais recente.
+ * Gerencia o acesso e a persistência de dados do usuário (preferências) usando DataStore.
  */
-class BatteryDataStoreManager(private val context: Context) {
+object BatteryDataStoreManager {
 
-    // --- Chaves do DataStore ---
-    private companion object {
-        // Armazena uma lista JSON ou string delimitada de estados de bateria
-        private val BATTERY_HISTORY_KEY = stringSetPreferencesKey("battery_history")
-        // Limite máximo de registros a armazenar (ex: 7 dias * 4 registros/dia)
-        private const val MAX_HISTORY_RECORDS = 50
-        // Status Padrão para quando a informação não estiver disponível
-        private const val DEFAULT_STATUS = "Unknown"
-    }
+    // --- Definição das Chaves de Preferência ---
+    private val MONITOR_ENABLED_KEY = booleanPreferencesKey("monitor_enabled")
+    private val UPDATE_FREQUENCY_KEY = stringPreferencesKey("update_frequency")
+
+    // Chaves de Preferência para Gráfico (para resolver referências em SettingsFragment, etc.)
+    private val GRAPH_COLOR_KEY = intPreferencesKey("graph_line_color")
+    private val SHOW_FILL_KEY = booleanPreferencesKey("show_fill")
+    private val SHOW_GRID_KEY = booleanPreferencesKey("show_grid")
+    private val LINE_WIDTH_KEY = intPreferencesKey("line_width")
+
+    // --- Funções de Leitura/Escrita Específicas ---
 
     /**
-     * Registra o estado atual da bateria no DataStore.
-     * @param info Os dados atuais da bateria.
+     * Define o estado de ativação do monitoramento da bateria.
      */
-    suspend fun recordBatteryState(info: BatteryInfo) {
-        val timestamp = Date().time
-        // Simplificar o status para um booleano de carregamento para histórico
-        val isCharging = info.status == android.os.BatteryManager.BATTERY_STATUS_CHARGING
-
-        // Formato: "timestamp:level:isCharging"
-        val newRecord = "$timestamp:${info.level}:$isCharging"
-
+    suspend fun setMonitoringEnabled(context: Context, isEnabled: Boolean) {
         context.dataStore.edit { preferences ->
-            val currentHistory = preferences[BATTERY_HISTORY_KEY] ?: emptySet()
-            val newHistory = (currentHistory + newRecord)
-                .sortedBy { it.substringBefore(':').toLong() } // Ordenar por tempo
-                .takeLast(MAX_HISTORY_RECORDS) // Manter apenas os mais recentes
-
-            preferences[BATTERY_HISTORY_KEY] = newHistory.toSet()
+            preferences[MONITOR_ENABLED_KEY] = isEnabled
         }
     }
 
     /**
-     * Obtém o histórico de bateria como uma lista de objetos simplificados.
-     * @return Flow de lista de pares (Timestamp, Nível)
+     * Verifica se o monitoramento da bateria está ativado.
+     * Retorna 'false' como padrão.
      */
-    val batteryHistoryFlow: Flow<List<Pair<Long, Int>>> = context.dataStore.data
-        .map { preferences ->
-            val historySet = preferences[BATTERY_HISTORY_KEY] ?: emptySet()
-            historySet
-                .mapNotNull { record ->
-                    try {
-                        val parts = record.split(":")
-                        if (parts.size == 3) {
-                            Pair(parts[0].toLong(), parts[1].toInt())
-                        } else {
-                            null
-                        }
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
-                .sortedBy { it.first } // Ordenar por timestamp
-        }
+    suspend fun isMonitoringEnabled(context: Context): Boolean {
+        // CORREÇÃO: O bloco `map` retorna o Boolean diretamente, e `first()` retorna o valor
+        return context.dataStore.data
+            .map { preferences ->
+                preferences[MONITOR_ENABLED_KEY] ?: false
+            }
+            .first()
+    }
 
     /**
-     * Limpa todo o histórico de bateria.
+     * Define a frequência de atualização do monitoramento.
      */
-    suspend fun clearHistory() {
-        context.dataStore.edit {
-            it.remove(BATTERY_HISTORY_KEY)
+    suspend fun setUpdateFrequency(context: Context, frequency: String) {
+        context.dataStore.edit { preferences ->
+            preferences[UPDATE_FREQUENCY_KEY] = frequency
         }
+    }
+
+    /**
+     * Obtém a frequência de atualização.
+     * Retorna "15_minutes" como padrão.
+     */
+    suspend fun getUpdateFrequency(context: Context): String {
+        return context.dataStore.data
+            .map { preferences ->
+                preferences[UPDATE_FREQUENCY_KEY] ?: "15_minutes"
+            }
+            .first()
+    }
+
+    // --- Funções Utilitárias Genéricas para Resolver Erros de Compilação em Outros Arquivos ---
+
+    /**
+     * Salva uma preferência booleana usando uma chave dinâmica (para SettingsFragment).
+     */
+    suspend fun saveBooleanPreference(context: Context, key: String, value: Boolean) {
+        context.dataStore.edit { preferences ->
+            val dataStoreKey = booleanPreferencesKey(key)
+            preferences[dataStoreKey] = value
+        }
+    }
+
+    /**
+     * Obtém uma preferência booleana usando uma chave dinâmica (para SettingsFragment).
+     */
+    suspend fun getBooleanPreference(context: Context, key: String): Boolean {
+        return context.dataStore.data
+            .map { preferences ->
+                val dataStoreKey = booleanPreferencesKey(key)
+                preferences[dataStoreKey] ?: false
+            }
+            .first()
+    }
+
+    /**
+     * Salva uma preferência Int (e.g., cor) usando uma chave dinâmica.
+     */
+    suspend fun saveIntPreference(context: Context, key: String, value: Int) {
+        context.dataStore.edit { preferences ->
+            val dataStoreKey = intPreferencesKey(key)
+            preferences[dataStoreKey] = value
+        }
+    }
+
+    /**
+     * Obtém uma preferência Int (e.g., cor) usando uma chave dinâmica.
+     */
+    suspend fun getIntPreference(context: Context, key: String): Int {
+        return context.dataStore.data
+            .map { preferences ->
+                val dataStoreKey = intPreferencesKey(key)
+                preferences[dataStoreKey] ?: 0 // Retorno padrão 0 se não encontrado
+            }
+            .first()
     }
 }

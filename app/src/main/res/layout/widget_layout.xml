@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_background_shape"
+    android:padding="16dp"
+    android:gravity="center_vertical">
+
+    <!-- Fundo do Widget (Definido em drawable) -->
+
+    <!-- Linha Superior: Nível e Status de Carregamento -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <!-- Nível de Bateria em Texto Grande -->
+        <TextView
+            android:id="@+id/text_battery_level"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="85%"
+            android:textColor="@android:color/white"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:layout_marginEnd="16dp"
+            />
+
+        <!-- Status de Carregamento -->
+        <TextView
+            android:id="@+id/text_charging_status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="A Carregar"
+            android:textColor="#C5C5C5"
+            android:textSize="14sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            />
+
+    </LinearLayout>
+
+    <!-- Barra de Progresso da Bateria -->
+    <ProgressBar
+        android:id="@+id/progress_bar_battery"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="100"
+        android:progress="85"
+        android:progressTint="#4CAF50"
+        android:backgroundTint="#CCCCCC"
+        android:layout_marginBottom="8dp"
+        />
+
+    <!-- Linha Inferior: Estima e Última Atualização -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Estima de Duração -->
+        <TextView
+            android:id="@+id/text_estimate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Estima: 4h 30m"
+            android:textColor="#C5C5C5"
+            android:textSize="12sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            />
+
+        <!-- Última Atualização -->
+        <TextView
+            android:id="@+id/text_last_updated"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Última Atualização: 15:30"
+            android:textColor="#C5C5C5"
+            android:textSize="12sp"
+            android:gravity="end"
+            android:maxLines="1"
+            android:ellipsize="end"
+            />
+
+    </LinearLayout>
+
+</LinearLayout>

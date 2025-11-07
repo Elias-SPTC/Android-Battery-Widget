@@ -1,110 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="16dp"
+    android:background="@android:color/white">
 
-    <!-- TextView para exibir o status de carregamento/erros do gráfico -->
+    <!-- 1. Texto de Status/Mensagem do Gráfico -->
     <TextView
         android:id="@+id/status_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:text="Inicializando..."
-        android:gravity="center"
-        android:textSize="14sp" />
-
-    <!-- Container para os campos de status de bateria (referenciados em WidgetActivity) -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
-        android:background="#F0F0F0"
-        android:layout_marginBottom="8dp">
+        android:text="@string/graph_status_empty"
+        android:gravity="center"
+        android:textSize="14sp"
+        android:textColor="@color/colorPrimaryDark"
+        android:layout_marginBottom="8dp" />
 
-        <!-- Linha 1: State e Plug -->
+    <!-- 2. Container de Detalhes da Bateria (Com ScrollView) -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dp"
+        android:overScrollMode="never">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="State:"
-                android:textStyle="bold" />
-            <TextView
-                android:id="@+id/status_state"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="N/A" />
+            android:orientation="vertical">
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Plug:"
-                android:textStyle="bold"
-                android:gravity="end"/>
-            <TextView
-                android:id="@+id/status_plug"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="N/A"
-                android:gravity="start"/>
+            <!-- Linha 1: Status -->
+            <LinearLayout style="@style/DetailRowStyle">
+                <TextView style="@style/DetailLabelStyle"
+                    android:text="@string/textState" />
+                <TextView
+                    android:id="@+id/status_state"
+                    style="@style/DetailValueStyle"
+                    android:text="@string/data_unavailable_short" />
+            </LinearLayout>
+            <View style="@style/DetailSeparatorStyle" />
+
+            <!-- Linha 2: Ligado (Plug) -->
+            <LinearLayout style="@style/DetailRowStyle">
+                <TextView style="@style/DetailLabelStyle"
+                    android:text="@string/textPlug" />
+                <TextView
+                    android:id="@+id/status_plug"
+                    style="@style/DetailValueStyle"
+                    android:text="@string/data_unavailable_short" />
+            </LinearLayout>
+            <View style="@style/DetailSeparatorStyle" />
+
+            <!-- Linha 3: Nível (Level) -->
+            <LinearLayout style="@style/DetailRowStyle">
+                <TextView style="@style/DetailLabelStyle"
+                    android:text="@string/textLevel" />
+                <TextView
+                    android:id="@+id/status_level"
+                    style="@style/DetailValueStyle"
+                    android:text="@string/data_unavailable_short" />
+            </LinearLayout>
+            <View style="@style/DetailSeparatorStyle" />
+
+            <!-- Linha 4: Escala (Scale) -->
+            <LinearLayout style="@style/DetailRowStyle">
+                <TextView style="@style/DetailLabelStyle"
+                    android:text="@string/textScale" />
+                <TextView
+                    android:id="@+id/status_scale"
+                    style="@style/DetailValueStyle"
+                    android:text="@string/data_unavailable_short" />
+            </LinearLayout>
+            <View style="@style/DetailSeparatorStyle" />
+
+            <!-- Linha 5: Voltagem (Voltage) -->
+            <LinearLayout style="@style/DetailRowStyle">
+                <TextView style="@style/DetailLabelStyle"
+                    android:text="@string/textVoltage" />
+                <TextView
+                    android:id="@+id/status_voltage"
+                    style="@style/DetailValueStyle"
+                    android:text="@string/data_unavailable_short" />
+            </LinearLayout>
+            <View style="@style/DetailSeparatorStyle" />
+
+            <!-- Linha 6: Temperatura (Temperature) -->
+            <LinearLayout style="@style/DetailRowStyle">
+                <TextView style="@style/DetailLabelStyle"
+                    android:text="@string/textTemperature" />
+                <TextView
+                    android:id="@+id/status_temp"
+                    style="@style/DetailValueStyle"
+                    android:text="@string/data_unavailable_short" />
+            </LinearLayout>
+            <View style="@style/DetailSeparatorStyle" />
+
+            <!-- Linha 7: Tecnologia (Technology) -->
+            <LinearLayout style="@style/DetailRowStyle">
+                <TextView style="@style/DetailLabelStyle"
+                    android:text="@string/textTechnology" />
+                <TextView
+                    android:id="@+id/status_technology"
+                    style="@style/DetailValueStyle"
+                    android:text="@string/data_unavailable_short" />
+            </LinearLayout>
+            <View style="@style/DetailSeparatorStyle" />
+
+            <!-- Linha 8: Saúde (Health) -->
+            <LinearLayout style="@style/DetailRowStyle">
+                <TextView style="@style/DetailLabelStyle"
+                    android:text="@string/textHealth" />
+                <TextView
+                    android:id="@+id/status_health"
+                    style="@style/DetailValueStyle"
+                    android:text="@string/data_unavailable_short" />
+            </LinearLayout>
+
         </LinearLayout>
+    </ScrollView>
 
-        <!-- Linha 2: Level e Temperature -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="4dp">
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Level:"
-                android:textStyle="bold" />
-            <TextView
-                android:id="@+id/status_level"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="N/A" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Temperature:"
-                android:textStyle="bold"
-                android:gravity="end"/>
-            <TextView
-                android:id="@+id/status_temp"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="N/A"
-                android:gravity="start"/>
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- LinearLayout onde o gráfico AChartEngine será injetado -->
+    <!-- 3. Contêiner do Gráfico de Histórico -->
     <LinearLayout
         android:id="@+id/graph_layout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:background="#FFFFFF"
-        android:layout_marginTop="8dp" />
-
+        android:background="@color/widget_graph_background"
+        android:layout_marginTop="16dp" />
 
 </LinearLayout>

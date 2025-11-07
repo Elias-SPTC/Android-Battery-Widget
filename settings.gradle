@@ -1,1 +1,18 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        // Repositório necessário para o MPAndroidChart (e outras bibliotecas externas)
+        maven { url 'https://jitpack.io' }
+    }
+}
+// Módulo principal do aplicativo
 include ':app'

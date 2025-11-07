@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Tema Base da Aplicação para o modo Noturno.
+         Herdamos de Theme.Material3.DayNight.NoActionBar para harmonizar com o tema claro e corrigir o erro de compilação.
+         As cores serão automaticamente carregadas do values-night/colors.xml. -->
+    <style name="Theme.AndroidBatteryWidget" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- CORES M3 PRINCIPAIS.
+             Referenciam os nomes de recurso definidos em values-night/colors.xml. -->
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorOnPrimary">@color/color_on_primary</item>
+
+        <!-- CORES M3 SECUNDÁRIAS -->
+        <item name="colorSecondary">@color/color_secondary</item>
+        <item name="colorOnSecondary">@color/color_on_secondary</item>
+
+        <!-- Cor da Barra de Status: Usamos o nome do recurso color_primary_variant. -->
+        <item name="android:statusBarColor" tools:targetApi="l">@color/color_primary_variant</item>
+
+        <!-- Os atributos 'colorPrimaryVariant' e 'colorSecondaryVariant' foram removidos no M3,
+             pois o novo sistema de cores trata disso automaticamente. -->
+    </style>
+</resources>

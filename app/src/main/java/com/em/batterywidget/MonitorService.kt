@@ -1,145 +1,78 @@
-package com.em.batterywidget
+package com.example.batterywidget
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.BatteryManager
-import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import com.em.batterywidget.UpdateServiceUtils.getBatteryIntent
-import kotlinx.coroutines.*
-import kotlin.math.roundToInt
 
 /**
- * Serviço de primeiro plano (Foreground Service) para monitorizar o estado da bateria
- * e agendar a gravação de dados de histórico.
+ * [MonitorService] é um serviço de fundo responsável por monitorizar
+ * alterações no estado da bateria do sistema e sinalizar o widget para atualizar.
  */
 class MonitorService : Service() {
 
-    private val job = Job()
-    private val scope = CoroutineScope(Dispatchers.IO + job)
-    private val NOTIFICATION_ID = 1
-    private val CHANNEL_ID = "BatteryMonitorChannel"
+    // Receiver interno para capturar as alterações da bateria
+    private val batteryReceiver = BatteryReceiver()
 
-    override fun onCreate() {
-        super.onCreate()
-        Log.d("MonitorService", "Service created.")
-        // Inicia a notificação de primeiro plano imediatamente
-        startForeground(NOTIFICATION_ID, createNotification())
-
-        // Inicia a lógica principal
-        startMonitoring()
-    }
-
-    private fun startMonitoring() {
-        // Agenda o worker para gravar o histórico e atualizar os widgets a cada 15 minutos
-        UpdateServiceUtils.scheduleOrCancelWork(this, true)
-
-        // No entanto, também precisamos de uma gravação inicial e atualização imediata.
-        scope.launch {
-            // Garante que a primeira atualização ocorre rapidamente
-            delay(1000)
-            collectBatteryInfoAndNotify()
-        }
-    }
-
-    /**
-     * Função que realiza a coleta de dados de bateria e notifica os widgets.
-     */
-    private suspend fun collectBatteryInfoAndNotify() {
-        // Corre no CoroutineScope (IO Thread)
-        val batteryIntent = getBatteryIntent(this)
-        val info = getBatteryInfoFromSystem(batteryIntent)
-
-        // 1. Grava os dados (Lógica de base de dados omitida, apenas para fins de esqueleto)
-        // saveBatteryInfoToHistory(info)
-
-        // 2. Notifica os widgets para que se atualizem com os novos dados
-        withContext(Dispatchers.Main) {
-            UpdateServiceUtils.updateAllWidgets(applicationContext)
-            UpdateServiceUtils.updateGraphWidgets(applicationContext)
-        }
-
-        Log.d("MonitorService", "Data collected and widgets updated. Level: ${info.level}%")
-    }
-
-    /**
-     * Extrai informações detalhadas da bateria a partir do Intent.
-     * Esta função estava em falta e foi adicionada aqui (necessária por WidgetActivity.kt).
-     */
-    fun getBatteryInfoFromSystem(batteryIntent: Intent?): BatteryExtraInfo {
-        if (batteryIntent == null) {
-            return BatteryExtraInfo(0, 0, 0f, 0f, "N/A")
-        }
-
-        val level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-        val scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-        // A voltagem é dada em mV e a temperatura em décimos de grau Celsius.
-        val voltage = batteryIntent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1) / 1000f // em Volts
-        val temperature = batteryIntent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) / 10f // em Celsius
-        val technology = batteryIntent.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY) ?: "N/A"
-
-        return BatteryExtraInfo(level, scale, voltage, temperature, technology)
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("MonitorService", "Service started command.")
-        // Se o serviço for morto, reinicie-o
-        return START_STICKY
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
-        Log.d("MonitorService", "Service destroyed.")
-        // Cancela o Worker quando o serviço for parado manualmente
-        UpdateServiceUtils.scheduleOrCancelWork(this, false)
-    }
-
+    // O serviço não será ligado por outros componentes (usa Broadcasts)
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
 
     /**
-     * Cria e configura a notificação para o serviço de primeiro plano.
+     * Chamado quando o serviço é iniciado (p. ex., pelo Provider ou pelo sistema).
+     * Aqui, registamos o nosso BroadcastReceiver.
      */
-    private fun createNotification(): Notification {
-        // Cria o canal de notificação no Android O e superior
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = getString(R.string.channel_name_battery_monitor)
-            val descriptionText = getString(R.string.channel_description_battery_monitor)
-            val importance = NotificationManager.IMPORTANCE_LOW
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-            }
-            val notificationManager: NotificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d("MonitorService", "Serviço Iniciado. A registar o Receiver de Bateria.")
 
-        // Constrói a notificação
-        return Notification.Builder(this, CHANNEL_ID)
-            .setContentTitle(getString(R.string.monitor_service_notification_title))
-            .setContentText(getString(R.string.monitor_service_notification_text))
-            .setSmallIcon(R.drawable.ic_battery_default) // Assumindo este recurso existe
-            .setPriority(Notification.PRIORITY_LOW)
-            .build()
+        // Intent Filter para escutar a ação do sistema que notifica sobre alterações na bateria
+        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+
+        // Registar o BroadcastReceiver. O ACTION_BATTERY_CHANGED é um broadcast "sticky",
+        // o que significa que podemos ler os dados atuais imediatamente.
+        registerReceiver(batteryReceiver, filter)
+
+        // Usamos START_STICKY para que o Android tente reiniciar o serviço
+        // se este for eliminado devido a baixa memória.
+        return START_STICKY
     }
 
     /**
-     * Estrutura de dados para informações extras da bateria,
-     * usadas tanto pelo serviço quanto pela atividade de detalhes.
+     * Chamado quando o serviço é destruído (p. ex., quando o último widget é removido).
+     * É crucial desregistar o Receiver aqui.
      */
-    data class BatteryExtraInfo(
-        val level: Int,
-        val scale: Int,
-        val voltage: Float,
-        val temperature: Float,
-        val technology: String
-    )
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("MonitorService", "Serviço Destruído. A desregistar o Receiver de Bateria.")
+        // Desregistar o receiver para evitar fugas de memória
+        unregisterReceiver(batteryReceiver)
+    }
+
+    /**
+     * BroadcastReceiver interno para receber o Intent ACTION_BATTERY_CHANGED.
+     */
+    private inner class BatteryReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == Intent.ACTION_BATTERY_CHANGED) {
+                // O estado da bateria mudou (nível, status, temperatura, etc.)
+                Log.d("BatteryReceiver", "Estado da bateria alterado. A sinalizar atualização do widget.")
+
+                // A informação real da bateria está neste Intent "sticky".
+                // Para manter o código limpo, vamos apenas sinalizar o Provider
+                // para que este leia o Intent 'sticky' mais recente e atualize a UI.
+
+                // 1. Criar a Intent de Atualização Personalizada
+                val updateIntent = Intent(context, BatteryWidgetProvider::class.java).apply {
+                    action = BatteryWidgetProvider.ACTION_BATTERY_UPDATE
+                }
+
+                // 2. Enviar a Intent para o Provider (que chama o onReceive/onUpdate)
+                context.sendBroadcast(updateIntent)
+            }
+        }
+    }
 }

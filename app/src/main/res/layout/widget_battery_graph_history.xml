@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+IMPORTANTE: A tag <layout> é necessária para o Data Binding.
+Ela permite que o compilador gere a classe de binding correspondente.
+Seu conteúdo visual deve vir a seguir.
+-->
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="https://www.google.com/search?q=http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Seu layout real do widget -->
+    <LinearLayout
+        android:id="@+id/widget_root_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="@drawable/widget_background">
+
+        <!-- Texto de status ou título do widget -->
+        <TextView
+            android:id="@+id/widget_status_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"
+            android:textColor="?android:attr/textColorPrimary"
+            tools:text="Bateria: 85% (Últimas 24h)" />
+
+        <!--
+            O BatteryGraphView (Classe Customizada de Gráfico)
+            Observe o uso do nome de classe completo (com.em.batterywidget.BatteryGraphView)
+            que foi inferido da sua estrutura de arquivos.
+        -->
+        <com.em.batterywidget.BatteryGraphView
+            android:id="@+id/battery_graph_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:graphColor="@color/graph_line_color"
+            tools:layout_height="80dp" />
+
+    </LinearLayout>
+
+
+</layout>

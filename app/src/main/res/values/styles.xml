@@ -1,62 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base application theme (do seu input). -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-    </style>
-
-    <!-- Theme for WidgetActivity to ensure it has no action bar (do seu input). -->
-    <style name="Theme.BatteryWidget" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-    </style>
-
-    <!-- ESTILOS OBRIGATÓRIOS PARA activity_widget.xml -->
-
-    <!-- Estilo para a linha que contém o rótulo e o valor -->
-    <style name="DetailRowStyle">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:orientation">horizontal</item>
-        <item name="android:paddingTop">8dp</item>
-        <item name="android:paddingBottom">8dp</item>
-    </style>
-
-    <!-- Estilo para o rótulo (texto da esquerda) -->
-    <style name="DetailLabelStyle">
+    <!-- Estilo para o TextView de Detalhes da Bateria na WidgetActivity -->
+    <style name="DetailTextStyle">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_weight">0.4</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/widget_text_color</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textColor">@color/widget_text_primary</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
     </style>
-
-    <!-- Estilo para o valor (texto da direita) -->
-    <style name="DetailValueStyle">
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_weight">0.6</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:textColor">@color/widget_text_color</item>
-    </style>
-
-    <!-- Estilo para a linha separadora horizontal -->
-    <style name="DetailSeparatorStyle">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">1dp</item>
-        <item name="android:background">@color/separator_color</item>
-        <item name="android:layout_marginTop">4dp</item>
-        <item name="android:layout_marginBottom">4dp</item>
-    </style>
-
-    <!-- Estilo de fundo para widgets (usado por widget_battery_graph.xml) -->
-    <style name="WidgetBackground" parent="">
-        <item name="android:background">@drawable/widget_background</item>
-        <item name="android:padding">8dp</item>
-    </style>
-
 </resources>

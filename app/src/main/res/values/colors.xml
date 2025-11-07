@@ -1,30 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Cores Padrão do Android (essenciais para referências em layouts) -->
+    <!-- Cores Padrão do Android/App -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Cores Padrão da Aplicação (Definidas no Tema) -->
-    <color name="colorPrimary">#00796B</color>
-    <color name="colorPrimaryDark">#004D40</color>
-    <color name="colorAccent">#FFC107</color>
+    <!-- Cor de Material Design Faltante (purple_500) -->
+    <color name="purple_500">#9C27B0</color>
 
-    <!-- Cores para o Widget -->
-    <color name="widget_background">#40000000</color> <!-- Transparente Escuro -->
-    <color name="widget_text_color">#FFFFFF</color> <!-- Cor do texto principal -->
+    <!-- Cores do Widget (Tema Escuro/Transparente Elegante) -->
+    <!-- Fundo base: Transparente ou levemente translúcido -->
+    <color name="widget_background_color_light">#D0FFFFFF</color>
+    <color name="widget_background_color_dark">#99202020</color>
 
-    <!-- CORREÇÃO: Esta cor estava a faltar e causava o erro de compilação -->
-    <color name="widget_secondary_text_color">#CCCCCC</color>
+    <!-- Cor de Destaque da Marca (Azul/Verde) -->
+    <color name="color_accent">#3F51B5</color>
+    <color name="color_default">#3F51B5</color>
 
-    <!-- Cor de separador (Necessária para os estilos DetailSeparatorStyle) -->
-    <color name="separator_color">#BDBDBD</color>
+    <!-- Cores de Texto do Widget -->
+    <color name="widget_text_primary">#FFFFFFFF</color>
+    <color name="widget_text_secondary">#FFBBBBBB</color>
 
-    <!-- Cores do Gráfico (Usadas na lógica de desenho do BatteryGraphWidget) -->
-    <color name="graph_line_color">#4CAF50</color> <!-- Cor da linha principal -->
-    <color name="graph_low_battery_color">#F44336</color> <!-- Vermelho (Para estado crítico) -->
+    <!-- Cor de texto secundário exigida pelo layout do widget (ADICIONADO) -->
+    <!-- Mapeando para o valor que você já tinha definido para texto secundário no seu tema escuro -->
+    <color name="widget_secondary_text">@color/widget_text_secondary</color>
 
-    <!-- Definições mais específicas de estado de bateria para o gráfico: -->
-    <color name="graph_line_good">#4CAF50</color> <!-- Verde -->
-    <color name="graph_line_low">#FF9800</color> <!-- Laranja -->
-    <color name="graph_line_critical">#F44336</color> <!-- Vermelho -->
+
+    <!-- Cores do Gráfico -->
+    <color name="graph_background_color">#00000000</color> <!-- Transparente -->
+    <color name="graph_line_color">#FF4CAF50</color> <!-- Verde: Linha principal do nível -->
+    <color name="graph_fill_color">#334CAF50</color> <!-- Verde Transparente: Área preenchida -->
+    <color name="graph_grid_color">#44FFFFFF</color> <!-- Cinza Claro Transparente: Linhas de grade -->
+    <color name="charging_color">#FFD500F9</color> <!-- Roxo Elétrico: Destaque de carregamento -->
+
+    <!-- Cores para o widget -->
+    <color name="battery_level_normal">#388E3C</color> <!-- Verde escuro para nível normal -->
+    <color name="battery_level_low">#D32F2F</color>    <!-- Vermelho escuro para nível baixo -->
 </resources>

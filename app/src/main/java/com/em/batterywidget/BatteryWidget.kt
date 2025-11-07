@@ -5,171 +5,179 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
-import android.content.ComponentName
-import android.os.Build
-import android.view.View
+import android.util.Log
 import android.widget.RemoteViews
-import com.em.batterywidget.UpdateServiceUtils.getBatteryIntent
-import com.em.batterywidget.UpdateServiceUtils.getBatteryLevel
-import com.em.batterywidget.UpdateServiceUtils.getBatteryStatus
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.firstOrNull
+import com.em.batterywidget.R // Assumindo R é o R gerado pelo Android Studio
 
 /**
- * AppWidgetProvider para o widget de bateria.
- * Responsável por receber eventos de broadcast do widget e atualizar a UI.
+ * AppWidgetProvider para o widget de exibição do nível da bateria.
+ * Responsável por receber eventos do sistema (onUpdate, onEnabled, etc.) e coordenar a renderização.
  */
 class BatteryWidget : AppWidgetProvider() {
 
-    // Ação de Intent para forçar a atualização do widget
+    private val job = SupervisorJob()
+    private val scope = CoroutineScope(Dispatchers.IO + job)
+
+    // Instâncias do DataStore e Renderer inicializadas sob demanda
+    private fun getDataStore(context: Context) = BatteryDataStoreManager(context)
+    private fun getRenderer(context: Context) = BatteryRenderer(context)
+
     companion object {
-        const val ACTION_REFRESH_WIDGET = "com.em.batterywidget.ACTION_REFRESH_WIDGET"
+        private const val TAG = "BatteryWidget"
     }
 
-    override fun onUpdate(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray
-    ) {
-        // Inicializar o utilitário (necessário para o contexto do AppWidgetProvider)
-        UpdateServiceUtils.init(context)
+    /**
+     * Chamado quando o widget é atualizado (periodicamente, sob demanda ou manualmente).
+     *
+     * @param context Contexto da aplicação.
+     * @param appWidgetManager O gerenciador de widgets.
+     * @param appWidgetIds IDs de todos os widgets a serem atualizados.
+     */
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        // Inicializa o serviço de monitoramento se ainda não estiver rodando.
+        // O monitoramento real deve ser iniciado aqui ou em onEnabled.
+        startBatteryMonitorService(context)
 
-        // Iniciar o serviço de monitorização da bateria se ainda não estiver em execução
-        UpdateServiceUtils.startBatteryMonitorService(context)
-
-        // Atualizar cada instância do widget
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
     }
 
-    override fun onReceive(context: Context?, intent: Intent?) {
-        super.onReceive(context, intent)
-        if (context == null || intent == null) return
+    /**
+     * Atualiza a UI de um widget específico.
+     * Esta função é executada em uma corrotina para acessar o DataStore.
+     */
+    private fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+        scope.launch {
+            try {
+                // 1. Obter os dados atuais da bateria
+                val dataStore = getDataStore(context)
+                val batteryInfo = dataStore.batteryDataFlow.firstOrNull() ?: getDefaultBatteryInfo()
 
-        // Inicializar o utilitário
-        UpdateServiceUtils.init(context)
+                // 2. Renderizar a UI
+                val renderer = getRenderer(context)
+                val views = renderer.render(batteryInfo)
 
-        if (intent.action == ACTION_REFRESH_WIDGET) {
-            // Se a ação for um pedido de atualização manual,
-            // forçamos o AppWidgetManager a atualizar todos os widgets
-            val componentName = ComponentName(context, BatteryWidget::class.java)
-            val appWidgetIds = AppWidgetManager.getInstance(context).getAppWidgetIds(componentName)
-            onUpdate(context, AppWidgetManager.getInstance(context), appWidgetIds)
+                // 3. Configurar o PendingIntent de clique (abrir a Activity)
+                val pendingIntent = createClickPendingIntent(context, appWidgetId)
+                // Define o PendingIntent para ser chamado quando o widget for clicado
+                views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
+
+                // 4. Aplicar o RemoteViews ao widget
+                appWidgetManager.updateAppWidget(appWidgetId, views)
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao atualizar o widget ID $appWidgetId", e)
+                // Em caso de falha, tenta renderizar um estado de erro básico (opcional)
+                val errorViews = RemoteViews(context.packageName, R.layout.widget_battery)
+                errorViews.setTextViewText(R.id.text_battery_level, "ERRO")
+                errorViews.setTextViewText(R.id.text_battery_status, "Dados indisponíveis")
+                appWidgetManager.updateAppWidget(appWidgetId, errorViews)
+            }
         }
     }
 
-    // Chamado quando um widget é eliminado do ecrã principal
-    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
-        super.onDeleted(context, appWidgetIds)
-
-        // Se todos os widgets forem removidos, o serviço de monitorização poderá ser parado
-        val appWidgetManager = AppWidgetManager.getInstance(context)
-        val componentName = ComponentName(context, BatteryWidget::class.java)
-
-        if (appWidgetManager.getAppWidgetIds(componentName).isEmpty()) {
-            // O código para parar o serviço deve ser adicionado aqui, se implementado.
-        }
-    }
-
-    // Função principal para construir e enviar a atualização do widget
-    private fun updateAppWidget(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int
-    ) {
-        // 1. Obter os dados atuais da bateria
-        val batteryIntent = getBatteryIntent(context)
-        val batteryLevel = getBatteryLevel(batteryIntent)
-        val status = getBatteryStatus(batteryIntent)
-        val isCharging = status.isCharging
-
-        // 2. Criar a vista remota (RemoteViews)
-        val views = RemoteViews(context.packageName, R.layout.widget_battery)
-
-        // 3. Atualizar elementos da UI
-
-        // Nível da Bateria
-        views.setTextViewText(
-            R.id.tv_battery_level,
-            context.getString(R.string.battery_level_format, batteryLevel) // Assumindo R.string.battery_level_format existe
-        )
-
-        // Indicador de Carregamento/Ícone de Bateria (usando a cor para indicar o estado)
-        views.setImageViewResource(
-            R.id.iv_charging_indicator,
-            if (isCharging) R.drawable.ic_charging_indicator // Assumindo ic_charging_indicator existe
-            else R.drawable.ic_battery_default // Assumindo ic_battery_default existe
-        )
-
-        // Alterar a cor de fundo do indicador (opcional, pode depender do seu layout XML)
-        val backgroundColor = if (batteryLevel <= 20 && !isCharging) {
-            context.getColor(R.color.graph_low_battery_color) // Assumindo R.color.graph_low_battery_color existe
-        } else {
-            context.getColor(android.R.color.transparent)
-        }
-        views.setInt(
-            R.id.iv_charging_indicator,
-            "setBackgroundColor",
-            backgroundColor
-        )
-
-
-        // Barra de Progresso
-        views.setProgressBar(
-            R.id.progress_bar,
-            100,
-            batteryLevel,
-            false
-        )
-
-        // 4. Configurar Intent para abrir a WidgetActivity (Detalhes)
-        val detailIntent = Intent(context, WidgetActivity::class.java).apply {
+    /**
+     * Cria um PendingIntent que abrirá a WidgetActivity.
+     */
+    private fun createClickPendingIntent(context: Context, appWidgetId: Int): PendingIntent {
+        val intent = Intent(context, WidgetActivity::class.java).apply {
+            // Adicione extras se precisar passar informações específicas
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-            // Adicionar flags de segurança e evitar conflitos com a pilha de tarefas
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
-        val detailPendingIntent: PendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            PendingIntent.getActivity(
-                context,
-                appWidgetId,
-                detailIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-            )
-        } else {
-            PendingIntent.getActivity(
-                context,
-                appWidgetId,
-                detailIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
-            )
-        }
+        // Define o PendingIntent com flags apropriadas
+        return PendingIntent.getActivity(
+            context,
+            appWidgetId, // Usa o ID do widget como requestCode para exclusividade
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
 
-        // Definir ação de clique no layout principal para abrir a atividade de detalhes
-        views.setOnClickPendingIntent(R.id.widget_container_layout, detailPendingIntent)
+    /**
+     * Retorna um objeto BatteryInfo com valores padrão em caso de falha de leitura do DataStore.
+     */
+    private fun getDefaultBatteryInfo(): BatteryInfo {
+        return BatteryInfo(
+            level = 0,
+            status = BatteryManager.BATTERY_STATUS_UNKNOWN,
+            health = BatteryManager.BATTERY_HEALTH_UNKNOWN,
+            plugged = 0,
+            voltageMillivolts = 0,
+            temperatureDeciCelsius = 0,
+            technology = "N/A",
+            timeRemaining = -1L
+        )
+    }
 
-        // 5. Configurar Intent para Atualização Manual (Botão)
-        val refreshIntent = Intent(context, BatteryWidget::class.java).apply {
-            action = ACTION_REFRESH_WIDGET
-        }
-        val refreshPendingIntent: PendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            PendingIntent.getBroadcast(
-                context,
-                appWidgetId,
-                refreshIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-        } else {
-            PendingIntent.getBroadcast(
-                context,
-                appWidgetId,
-                refreshIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
-            )
-        }
-        // Configurar ação de clique no botão de atualização
-        views.setOnClickPendingIntent(R.id.btn_refresh, refreshPendingIntent)
+    /**
+     * Chamado quando a primeira instância do widget é adicionada.
+     * Usado para iniciar o serviço de monitoramento.
+     */
+    override fun onEnabled(context: Context) {
+        Log.d(TAG, "onEnabled: Primeira instância do widget adicionada.")
+        startBatteryMonitorService(context)
+    }
 
-        // 6. Finalmente, instruir o AppWidgetManager para executar a atualização
-        appWidgetManager.updateAppWidget(appWidgetId, views)
+    /**
+     * Chamado quando a última instância do widget é removida.
+     * Usado para parar o serviço de monitoramento, economizando recursos.
+     */
+    override fun onDisabled(context: Context) {
+        Log.d(TAG, "onDisabled: Última instância do widget removida.")
+        stopBatteryMonitorService(context)
+
+        // Cancela todas as corrotinas pendentes
+        job.cancel()
+    }
+
+    /**
+     * Chamado quando uma instância específica do widget é excluída.
+     */
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        Log.d(TAG, "onDeleted: Widget(s) excluído(s). IDs: ${appWidgetIds.joinToString()}")
+    }
+
+    /**
+     * Inicia o serviço que monitora as alterações da bateria.
+     * (Assumindo que existe uma classe BatteryMonitorService)
+     */
+    private fun startBatteryMonitorService(context: Context) {
+        // Envia uma intent para iniciar o serviço (que deve ser configurado como foreground service)
+        val serviceIntent = Intent(context, BatteryMonitorService::class.java)
+        try {
+            // Em Android O (API 26) e superior, deve-se usar startForegroundService
+            context.startForegroundService(serviceIntent)
+            Log.d(TAG, "BatteryMonitorService iniciado via startForegroundService.")
+        } catch (e: Exception) {
+            // Em APIs mais antigas
+            context.startService(serviceIntent)
+            Log.d(TAG, "BatteryMonitorService iniciado via startService.")
+        }
+        // Usamos o DataStore para registrar que o serviço está rodando.
+        scope.launch {
+            getDataStore(context).setIsServiceRunning(true)
+        }
+    }
+
+    /**
+     * Para o serviço de monitoramento da bateria.
+     * (Chamado apenas quando não há mais widgets ativos)
+     */
+    private fun stopBatteryMonitorService(context: Context) {
+        val serviceIntent = Intent(context, BatteryMonitorService::class.java)
+        context.stopService(serviceIntent)
+        Log.d(TAG, "BatteryMonitorService parado.")
+
+        // Atualiza o DataStore para registrar que o serviço parou.
+        scope.launch {
+            getDataStore(context).setIsServiceRunning(false)
+        }
     }
 }

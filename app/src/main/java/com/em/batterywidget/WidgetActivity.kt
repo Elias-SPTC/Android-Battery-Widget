@@ -1,125 +1,139 @@
 package com.em.batterywidget
 
-import android.app.Activity
-import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
+import android.widget.ImageView
 import android.widget.TextView
-import com.em.batterywidget.UpdateServiceUtils.getBatteryIntent
-import com.em.batterywidget.UpdateServiceUtils.getBatteryStatus
-import com.em.batterywidget.UpdateServiceUtils.mapHealthCodeToString
-import com.em.batterywidget.MonitorService.BatteryExtraInfo
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import com.em.batterywidget.databinding.ActivityWidgetBinding
 
 /**
- * Atividade para mostrar os detalhes da bateria.
+ * Activity exibida ao clicar no widget principal.
+ *
+ * Esta tela deve mostrar:
+ * 1. O nível atual e status de carregamento.
+ * 2. Detalhes estendidos (saúde, temperatura, voltagem, etc.).
+ * 3. O gráfico de histórico de bateria (utilizando BatteryGraphView).
  */
-class WidgetActivity : Activity() {
+class WidgetActivity : AppCompatActivity() {
 
-    private val handler = Handler(Looper.getMainLooper())
-    private val updateRunnable = Runnable { updateDetails() }
-
-    // Referências de TextView para os dados detalhados
-    private lateinit var tvStatus: TextView
-    private lateinit var tvPlugged: TextView
-    private lateinit var tvLevel: TextView
-    private lateinit var tvScale: TextView
-    private lateinit var tvVoltage: TextView
-    private lateinit var tvTemperature: TextView
-    private lateinit var tvTechnology: TextView
-    private lateinit var tvHealth: TextView
+    private lateinit var binding: ActivityWidgetBinding
+    private lateinit var batteryMonitor: BatteryMonitor
+    private lateinit var dataStoreManager: BatteryDataStoreManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = ActivityWidgetBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        // Inicializa o UpdateServiceUtils
-        UpdateServiceUtils.init(this)
+        // Inicializa as dependências
+        batteryMonitor = BatteryMonitor(applicationContext)
+        dataStoreManager = BatteryDataStoreManager(applicationContext)
 
-        // Define o layout
-        setContentView(R.layout.activity_widget)
+        // Define a cor da barra de status para um tom escuro/transparente
+        window.statusBarColor = Color.TRANSPARENT
+        window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
 
-        // Inicializa as TextViews
-        tvStatus = findViewById(R.id.tv_status_value)
-        tvPlugged = findViewById(R.id.tv_plugged_value)
-        tvLevel = findViewById(R.id.tv_level_value)
-        tvScale = findViewById(R.id.tv_scale_value)
-        tvVoltage = findViewById(R.id.tv_voltage_value)
-        tvTemperature = findViewById(R.id.tv_temperature_value)
-        tvTechnology = findViewById(R.id.tv_technology_value)
-        tvHealth = findViewById(R.id.tv_health_value)
+        // Observa e atualiza os dados da UI
+        observeBatteryData()
 
-        // Define o título da atividade.
-        title = getString(R.string.activity_title_unavailable)
+        // Define o clique para o botão de configurações (para referência futura,
+        // a lógica de navegação será adicionada na MainActivity)
+        binding.btnSettings.setOnClickListener {
+            // TODO: Adicionar navegação para MainActivity/SettingsFragment aqui
+            // Por enquanto, apenas loga
+            println("Configurações Clicadas!")
+        }
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Começa a atualização a cada 5 segundos
-        handler.post(updateRunnable)
+    /**
+     * Coleta o BatteryInfo atual e o BatteryExtraInfo do DataStore
+     * e atualiza todos os elementos da interface do usuário.
+     */
+    private fun observeBatteryData() {
+        lifecycleScope.launch {
+            // 1. Obter dados primários em tempo real
+            val batteryInfo = batteryMonitor.getBatteryInfo()
+
+            // 2. Obter dados estendidos (DataStore)
+            val extraInfo = dataStoreManager.batteryExtraInfoFlow.first()
+
+            // 3. Atualizar a UI
+            updateBatteryLevel(batteryInfo)
+            updateExtendedDetails(batteryInfo, extraInfo)
+
+            // O gráfico (BatteryGraphView) tem sua própria lógica de carregamento
+            // de dados do banco de dados na inicialização, mas garantimos que o LayoutManager
+            // seja definido aqui para exibir os detalhes estendidos corretamente.
+        }
     }
 
-    override fun onPause() {
-        super.onPause()
-        // Para a atualização quando a atividade está em pausa
-        handler.removeCallbacks(updateRunnable)
-    }
+    /**
+     * Atualiza o círculo de nível e a porcentagem.
+     */
+    private fun updateBatteryLevel(info: BatteryInfo) {
+        // Assume que BatteryRenderer está disponível (será implementado mais tarde)
+        // Por enquanto, apenas define os textos básicos.
 
-    private fun updateDetails() {
-        val batteryIntent = getBatteryIntent(this)
+        // Nível de Porcentagem
+        binding.tvBatteryLevel.text = getString(R.string.battery_level_format, info.level)
 
-        if (batteryIntent != null) {
-            // Obter informações detalhadas (agora usando a função do MonitorService simulada)
-            val info = MonitorService().getBatteryInfoFromSystem(batteryIntent)
+        // Status de Carregamento
+        val statusText = when {
+            info.isCharging -> getString(R.string.status_charging)
+            else -> getString(R.string.status_discharging)
+        }
+        binding.tvStatus.text = statusText
 
-            // Obter status formatado
-            val status = getBatteryStatus(batteryIntent)
-
-            // Atualizar Título
-            title = getString(R.string.activity_title)
-
-            // Atualizar valores de TextView
-            tvStatus.text = status.statusText
-            tvPlugged.text = status.plugText
-
-            tvLevel.text = getString(
-                R.string.detail_level_format,
-                info.level,
-                info.scale
-            )
-            tvScale.text = info.scale.toString()
-            tvVoltage.text = getString(
-                R.string.detail_voltage_format,
-                info.voltage
-            )
-            tvTemperature.text = getString(
-                R.string.detail_temperature_format,
-                info.temperature
-            )
-            tvTechnology.text = info.technology.ifEmpty {
-                getString(R.string.battery_technology_unknown)
-            }
-
-            // Mapear código de saúde para string
-            val healthCode = batteryIntent.getIntExtra(android.os.BatteryManager.EXTRA_HEALTH, -1)
-            tvHealth.text = mapHealthCodeToString(healthCode)
-
+        // Cor do nível (para simulação antes de implementar o BatteryRenderer)
+        val color = if (info.isCharging) {
+            getColor(R.color.charging_color) // Roxo elétrico
+        } else if (info.level < 20) {
+            Color.RED
         } else {
-            // Se o Intent for nulo (dados indisponíveis)
-            val unavailable = getString(R.string.data_unavailable_short)
-            title = getString(R.string.activity_title_unavailable)
-
-            tvStatus.text = unavailable
-            tvPlugged.text = unavailable
-            tvLevel.text = unavailable
-            tvScale.text = unavailable
-            tvVoltage.text = unavailable
-            tvTemperature.text = unavailable
-            tvTechnology.text = unavailable
-            tvHealth.text = unavailable
+            getColor(R.color.color_accent)
         }
 
-        // Agenda a próxima atualização
-        handler.postDelayed(updateRunnable, 5000)
+        // Simulação do ícone de status de carregamento
+        binding.imgChargingIcon.visibility = if (info.isCharging) android.view.View.VISIBLE else android.view.View.GONE
+
+        // TODO: A atualização do círculo de progresso (BatteryRenderer) e do ícone de bateria
+        // será feita quando o BatteryRenderer for implementado. Por enquanto, a UI básica é preenchida.
+    }
+
+    /**
+     * Atualiza a seção de detalhes estendidos (saúde, temperatura, etc.).
+     */
+    private fun updateExtendedDetails(info: BatteryInfo, extraInfo: BatteryExtraInfo) {
+        // Mapa de Health Status para String
+        val healthString = when (info.health) {
+            BatteryInfo.Health.GOOD -> getString(R.string.health_good)
+            BatteryInfo.Health.OVERHEAT -> getString(R.string.health_overheat)
+            BatteryInfo.Health.DEAD -> getString(R.string.health_dead)
+            BatteryInfo.Health.OVERVOLTAGE -> getString(R.string.health_overvoltage)
+            BatteryInfo.Health.FAILURE -> getString(R.string.health_failure)
+            BatteryInfo.Health.COLD -> getString(R.string.health_cold)
+            else -> getString(R.string.health_unknown)
+        }
+
+        // 1. Linha de Status (Saúde e Tecnologia)
+        binding.tvHealthStatus.text = getString(R.string.detail_health, healthString)
+        binding.tvTechnology.text = getString(R.string.detail_technology, info.technology ?: getString(R.string.unknown))
+
+        // 2. Linha de Voltagem e Temperatura
+        binding.tvVoltage.text = getString(R.string.detail_voltage, info.voltage / 1000.0)
+        binding.tvTemperature.text = getString(R.string.detail_temperature, info.temperature / 10.0)
+
+        // 3. Linha de Capacidade e Ciclos (Dados do DataStore)
+        // A capacidade (design/max) e os ciclos dependem do BatteryExtraInfo
+        binding.tvMaxCapacity.text = getString(R.string.detail_max_capacity, extraInfo.maxCapacity)
+        binding.tvCycleCount.text = getString(R.string.detail_cycle_count, extraInfo.cycleCount)
+
+        // 4. Última atualização
+        binding.tvLastUpdate.text = getString(R.string.detail_last_update,
+            UpdateServiceUtils.formatTime(System.currentTimeMillis()))
     }
 }

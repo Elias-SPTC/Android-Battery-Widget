@@ -1,55 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<!--
-Layout principal para o BatteryWidget (o widget que mostra a pilha/status atual).
-Este layout é simples e focado no nível de bateria em destaque.
--->
-
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="8dp"
-    android:background="@drawable/widget_background">
+    android:padding="@dimen/widget_margin"
+    android:background="@drawable/widget_background_rounded">
 
-    <!--
-        ImageView para desenhar a pilha de bateria.
-        No BatteryRenderer, este ImageView será atualizado com um Bitmap
-        que representa o estado da bateria (nível, cor, carregando).
-    -->
-    <ImageView
-        android:id="@+id/battery_image_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:contentDescription="Ícone da bateria"
-        android:scaleType="fitCenter" />
-
-    <!--
-        TextView para exibir o nível de porcentagem sobre a pilha.
-        O BatteryRenderer atualizará este texto.
-    -->
+    <!-- O bloco TextView para a Porcentagem, centralizado. -->
     <TextView
-        android:id="@+id/battery_level_text"
+        android:id="@+id/battery_percentage_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="50%"
-        android:textSize="24sp"
+        android:layout_centerInParent="true"
+        android:textSize="32sp"
+        android:textStyle="bold"
         android:textColor="@android:color/white"
-        android:textStyle="bold" />
+        android:text="--%" />
 
-    <!--
-        TextView pequeno para informações adicionais (status de carregamento ou temperatura).
-    -->
+    <!-- O bloco ImageView para o Ícone de Status (Corrigido para fechar com />) -->
+    <ImageView
+        android:id="@+id/status_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@id/battery_percentage_text"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="@string/content_description_status_icon"
+        android:src="@drawable/ic_battery_status" />
+
+    <!-- O bloco TextView para o Status de Carregamento/Saúde -->
     <TextView
-        android:id="@+id/battery_status_info"
+        android:id="@+id/status_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="4dp"
-        android:text="Carregando"
+        android:layout_below="@id/battery_percentage_text"
+        android:layout_centerHorizontal="true"
         android:textSize="10sp"
-        android:textColor="@android:color/white" />
+        android:textColor="@color/widget_secondary_text"
+        android:text="@string/status_unknown" />
 
-
-</FrameLayout>
+</RelativeLayout>

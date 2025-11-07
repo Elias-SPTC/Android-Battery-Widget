@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Fundo simples: um retângulo arredondado com um cinza transparente -->
+
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="16dp" />
+    <solid android:color="#40000000" /> <!-- Preto transparente (para combinar com o modo escuro) -->
+    <padding android:left="4dp" android:top="4dp" android:right="4dp" android:bottom="4dp" />
+</shape>

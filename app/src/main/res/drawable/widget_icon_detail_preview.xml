@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:padding="4dp"
+    android:gravity="center_vertical"
+    android:background="@drawable/widget_background_dark">
+
+    <!-- Ícone de Bateria (ImageView simples para representar o nível) -->
+    <ImageView
+        android:id="@+id/battery_icon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/ic_battery_full_24dp"
+        android:tint="@color/graph_line_color"
+        android:contentDescription="@string/battery_icon_description"
+        android:layout_marginEnd="8dp"/>
+
+    <!-- Detalhes em Coluna -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Nível de Bateria e Status -->
+        <TextView
+            android:id="@+id/battery_level_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="100%"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+
+        <!-- Status (Charging/Discharging/Full) -->
+        <TextView
+            android:id="@+id/battery_status_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status: Charging"
+            android:textColor="@color/charging_color"
+            android:textSize="12sp"/>
+
+    </LinearLayout>
+
+</LinearLayout>

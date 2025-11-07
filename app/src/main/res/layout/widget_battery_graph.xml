@@ -1,40 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_graph_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="8dp"
-    android:background="@drawable/widget_background">
+    android:background="@drawable/bg_widget_rounded">
 
-    <!-- Título do Gráfico -->
-    <TextView
-        android:id="@+id/tv_graph_title"
-        android:layout_width="wrap_content"
+    <!-- 1. Título e Status Resumido -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/graph_description"
-        android:textStyle="bold"
-        android:textSize="14sp"
-        android:textColor="@color/widget_text_color"
-        android:layout_marginBottom="4dp" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="4dp">
 
-    <!-- Status Atual/Último Nível -->
-    <TextView
-        android:id="@+id/tv_graph_status_latest"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="12sp"
-        android:textColor="@color/widget_secondary_text_color"
-        tools:text="Latest: 85% (Charging)"
-        android:layout_marginBottom="8dp" />
+        <!-- Título do Widget -->
+        <TextView
+            android:id="@+id/text_graph_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/graph_widget_title"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
-    <!-- Área de Desenho do Gráfico (será um Bitmap no código) -->
+        <!-- Nível Atual (Simples) -->
+        <TextView
+            android:id="@+id/text_current_level_summary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="14sp"
+            tools:text="95%" />
+
+    </LinearLayout>
+
+    <!-- 2. Área do Gráfico -->
+    <!-- Este ImageView receberá o Bitmap desenhado pelo código Kotlin -->
     <ImageView
-        android:id="@+id/iv_graph_canvas"
+        android:id="@+id/image_battery_graph"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:scaleType="fitXY"
-        android:contentDescription="@string/graph_description" />
+        android:background="@color/graph_background_color"
+        android:contentDescription="@string/battery_graph_description"
+        tools:src="@drawable/graph_placeholder" />
+
+    <!-- 3. Carimbo de Data/Hora (Rodapé) -->
+    <TextView
+        android:id="@+id/text_graph_timestamp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textAlignment="center"
+        android:textColor="@color/widget_secondary_text_color"
+        android:textSize="9sp"
+        tools:text="Histórico das últimas 24h" />
 
 </LinearLayout>
