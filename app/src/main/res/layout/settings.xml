@@ -1,56 +1,6 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-    <!--
-        ATENÇÃO: Este layout de preferências é um palpite baseado nos erros.
-        Se seu arquivo original for diferente, use esta estrutura como guia para
-        corrigir os namespaces (usando 'app:' em vez de 'android:' para
-        atributos de preferência como 'iconSpaceReserved', 'useSimpleSummaryProvider', etc.)
-    -->
-
-    <!-- Categoria: Monitoramento de Bateria -->
-    <PreferenceCategory
-        android:key="category_monitoring"
-        android:title="@string/category_monitoramento"
-        app:iconSpaceReserved="false">
-
-        <!-- Preferência para Habilitar/Desabilitar o Monitoramento -->
-        <SwitchPreference
-            android:key="@string/key_monitor_enabled"
-            android:title="@string/title_monitor_enabled"
-            android:defaultValue="true"
-            app:iconSpaceReserved="false"/>
-
-        <!-- Preferência para Frequência de Atualização (ListPreference) -->
-        <ListPreference
-            android:key="@string/key_update_frequency"
-            android:title="@string/title_update_frequency"
-            android:defaultValue="900000"
-            app:useSimpleSummaryProvider="true"
-            app:entries="@array/update_frequency_entries"
-            app:entryValues="@array/update_frequency_values"
-            app:iconSpaceReserved="false"/>
-
-    </PreferenceCategory>
-
-    <!-- Categoria: Aparência do Widget -->
-    <PreferenceCategory
-        android:key="category_appearance"
-        android:title="@string/category_aparencia"
-        app:iconSpaceReserved="false">
-
-        <!-- Preferência para Cor do Gráfico (ColorPicker ou similar) -->
-        <!-- Usamos uma Preferência genérica aqui, assumindo que um ColorPicker seria implementado separadamente -->
-        <Preference
-            android:key="@string/key_graph_color"
-            android:title="@string/title_graph_color"
-            android:summary="@string/summary_graph_color"
-            app:iconSpaceReserved="false"/>
-
-        <!-- Aqui seria o seu Preference (ou ListPreference) que usa o erro na linha 54 -->
-        <Preference
-            android:key="key_some_other_setting"
-            android:title="Outra Configuração"
-            app:iconSpaceReserved="false"/>
-
-    </PreferenceCategory>
-</PreferenceScreen>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Este arquivo foi esvaziado para corrigir um erro de compilação do Data Binding. -->
+<!-- A tela de configurações original era baseada em uma arquitetura obsoleta. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />

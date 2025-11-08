@@ -1,68 +1,53 @@
 package com.em.batterywidget
 
+import android.graphics.*
+import android.os.BatteryManager
+
 /**
- * Classe de dados que representa o estado atual da bateria do dispositivo.
- *
- * Esta estrutura é usada por BatteryMonitor para coletar dados brutos do Intent
- * e por WidgetUpdater para renderizar o estado nos widgets.
+ * Objeto utilitário para renderizar os componentes visuais dos widgets de bateria.
  */
-data class BatteryInfo(
-    // Nível atual da bateria (0-100)
-    val level: Int,
-    // Estado do carregamento: true se o dispositivo estiver carregando (AC, USB, wireless)
-    val isCharging: Boolean,
-    // Status detalhado da bateria (Carregando, Descarga, Completo, etc.)
-    val status: Status,
-    // Fonte de energia (AC, USB, Wireless, Nenhuma)
-    val chargeSource: ChargeSource = ChargeSource.NONE,
-    // Temperatura da bateria em décimos de grau Celsius (e.g., 300 = 30.0°C)
-    val temperature: Int = 0,
-    // Voltagem da bateria em milivolts
-    val voltage: Int = 0,
-    // Saúde da bateria (Bom, Ruim, etc.)
-    val health: Health = Health.UNKNOWN
-) {
+object BatteryRenderer {
 
     /**
-     * Enumeração dos possíveis estados de saúde da bateria.
+     * Cria um Bitmap que representa o estado atual da bateria.
+     * CORRIGIDO: O parâmetro 'context' não utilizado foi removido.
      */
-    enum class Health {
-        UNKNOWN,
-        GOOD,
-        OVERHEAT,
-        DEAD,
-        OVER_VOLTAGE,
-        UNSPECIFIED_FAILURE,
-        COLD
-    }
+    fun createBatteryBitmap(info: BatteryLog): Bitmap {
+        val width = 200
+        val height = 200
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-    /**
-     * Enumeração dos possíveis status operacionais da bateria.
-     */
-    enum class Status {
-        UNKNOWN,
-        CHARGING,
-        DISCHARGING,
-        NOT_CHARGING,
-        FULL
-    }
+        paint.color = if (info.level <= 15) Color.RED else Color.DKGRAY
 
-    /**
-     * Enumeração das possíveis fontes de carregamento.
-     */
-    enum class ChargeSource {
-        NONE,
-        AC,
-        USB,
-        WIRELESS,
-        OTHER
-    }
+        val body = RectF(10f, 50f, width - 10f, height - 10f)
+        canvas.drawRect(body, paint)
 
-    /**
-     * Retorna a temperatura formatada em graus Celsius.
-     */
-    fun getTemperatureCelsius(): String {
-        // A temperatura é fornecida em décimos de grau Celsius
-        return String.format("%.1f°C", temperature / 10f)
+        val terminal = RectF(width * 0.4f, 20f, width * 0.6f, 50f)
+        canvas.drawRect(terminal, paint)
+
+        paint.color = Color.GREEN
+        val levelHeight = (body.height() - 20) * (info.level / 100.0f)
+        val levelRect = RectF(
+            body.left + 10f,
+            body.bottom - 10f - levelHeight,
+            body.right - 10f,
+            body.bottom - 10f
+        )
+        canvas.drawRect(levelRect, paint)
+
+        if (info.status == BatteryManager.BATTERY_STATUS_CHARGING) {
+            paint.color = Color.YELLOW
+            val path = Path().apply {
+                moveTo(width * 0.5f, height * 0.4f)
+                lineTo(width * 0.4f, height * 0.6f)
+                lineTo(width * 0.6f, height * 0.6f)
+                lineTo(width * 0.5f, height * 0.8f)
+            }
+            canvas.drawPath(path, paint)
+        }
+
+        return bitmap
     }
 }

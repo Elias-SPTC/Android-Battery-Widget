@@ -1,19 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_text_container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="8dp"
+    android:layout_height="50dp"
     android:background="@drawable/widget_background_dark">
 
-    <TextView
-        android:id="@+id/battery_level_text_only"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="100%"
-        android:textSize="24sp"
-        android:textColor="#FFFFFF"
-        android:textStyle="bold"
-        android:contentDescription="@string/widget_text_only_description" />
+    <!-- Barra de Progresso estilizada como uma pilha -->
+    <ProgressBar
+        android:id="@+id/battery_progress_bar"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:progressDrawable="@drawable/progress_bar_horizontal_battery"
+        tools:progress="85" />
 
-</RelativeLayout>
+    <!-- Container Relativo para alinhar o raio e o texto -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <!-- Ícone de Raio, alinhado à esquerda -->
+        <ImageView
+            android:id="@+id/charging_bolt_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:src="@drawable/ic_charging_bolt"
+            android:adjustViewBounds="true"
+            android:scaleType="centerInside"
+            android:padding="8dp"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <!-- Texto da Porcentagem, alinhado à direita -->
+        <TextView
+            android:id="@+id/battery_level_text_only"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:gravity="center_vertical|end"
+            android:textColor="#FFFFFFFF"
+            android:textSize="24sp" 
+            android:textStyle="bold"
+            tools:text="85%" />
+
+    </RelativeLayout>
+
+</FrameLayout>

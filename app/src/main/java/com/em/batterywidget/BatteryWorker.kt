@@ -1,76 +1,81 @@
 package com.em.batterywidget
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
-import android.util.Log
-import androidx.work.Constraints
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
 import androidx.work.CoroutineWorker
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import java.util.concurrent.TimeUnit
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
- * Worker do WorkManager para agendar e executar o log periódico do estado da bateria.
+ * Um Worker que periodicamente busca o estado da bateria e o salva no banco de dados.
  */
-class BatteryWorker(appContext: Context, workerParams: WorkerParameters) :
-    CoroutineWorker(appContext, workerParams) {
+class BatteryWorker(
+    appContext: Context,
+    workerParams: WorkerParameters
+) : CoroutineWorker(appContext, workerParams), KoinComponent {
+
+    private val repository: BatteryRepository by inject()
 
     companion object {
-        const val WORK_NAME = "BatteryLogWork"
-        private const val TAG = "BatteryWorker"
+        // Ação genérica para notificar widgets simples
+        const val ACTION_WIDGET_UPDATE = "com.em.batterywidget.ACTION_WIDGET_UPDATE"
+    }
 
-        /**
-         * Agenda a tarefa periódica para registrar o estado da bateria.
-         * Esta tarefa será executada a cada 15 minutos.
-         *
-         * @param context O contexto da aplicação.
-         */
-        fun schedulePeriodicWork(context: Context) {
-            Log.d(TAG, "Agendando trabalho periódico para log de bateria.")
-
-            // Restrições: O trabalho deve ser executado mesmo sem conexão de rede (não requer rede)
-            val constraints = Constraints.Builder()
-                // Nenhuma restrição de rede, pois não estamos buscando dados externos
-                .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-                .build()
-
-            // Cria a solicitação de trabalho periódico
-            // Período mínimo de repetição é de 15 minutos
-            val workRequest = PeriodicWorkRequestBuilder<BatteryWorker>(
-                15, TimeUnit.MINUTES, // Intervalo de repetição
-                5, TimeUnit.MINUTES // Intervalo de flexibilidade (opcional)
-            )
-                .setConstraints(constraints)
-                .addTag(WORK_NAME) // Etiqueta para identificação
-                .build()
-
-            // Envia a solicitação ao WorkManager.
-            // ExistingPeriodicWorkPolicy.KEEP garante que se a tarefa já estiver agendada,
-            // ela não será substituída, mantendo o agendamento original.
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                WORK_NAME,
-                androidx.work.ExistingPeriodicWorkPolicy.KEEP,
-                workRequest
-            )
-            Log.i(TAG, "Trabalho periódico agendado com sucesso.")
+    override suspend fun doWork(): Result {
+        return try {
+            captureAndLogBatteryState(applicationContext)
+            Result.success()
+        } catch (e: Exception) {
+            Result.retry()
         }
     }
 
-    /**
-     * Este método é chamado pelo WorkManager para executar a tarefa.
-     */
-    override suspend fun doWork(): Result {
-        return try {
-            // Chamamos a função de log que obtém o estado da bateria e salva no Room
-            BatteryMonitor.logBatteryState(applicationContext)
+    private suspend fun captureAndLogBatteryState(context: Context) {
+        val batteryStatus: Intent? = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
 
-            Log.d(TAG, "Tarefa do Worker concluída com sucesso.")
-            Result.success()
-        } catch (e: Exception) {
-            Log.e(TAG, "Falha na execução do BatteryWorker.", e)
-            // Se falhar, tentamos novamente
-            Result.retry()
+        val level: Int = batteryStatus?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+        val scale: Int = batteryStatus?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+        val batteryPct: Int = if (level != -1 && scale > 0) (level * 100 / scale.toFloat()).toInt() else -1
+
+        if (batteryPct != -1) {
+            val status: Int = batteryStatus?.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN) ?: BatteryManager.BATTERY_STATUS_UNKNOWN
+            val health: Int = batteryStatus?.getIntExtra(BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_UNKNOWN) ?: BatteryManager.BATTERY_HEALTH_UNKNOWN
+            val plugged: Int = batteryStatus?.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) ?: 0
+            val technology: String = batteryStatus?.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY) ?: "N/A"
+            val temperature: Int = batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0
+            val voltage: Int = batteryStatus?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0) ?: 0
+
+            val currentLog = BatteryLog(
+                level = batteryPct, status = status, health = health, plugged = plugged,
+                technology = technology, temperature = temperature, voltage = voltage
+            )
+            
+            repository.addBatteryLog(currentLog)
+
+            // CORRIGIDO: Envia broadcasts para TODOS os providers relevantes.
+            sendUpdateBroadcasts(context)
+        }
+    }
+
+    private fun sendUpdateBroadcasts(context: Context) {
+        // Notifica o provider dos widgets simples (Ícone, Texto)
+        Intent(context, BatteryAppWidgetProvider::class.java).also { intent ->
+            intent.action = ACTION_WIDGET_UPDATE
+            val ids = AppWidgetManager.getInstance(context).getAppWidgetIds(android.content.ComponentName(context, BatteryAppWidgetProvider::class.java))
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+            context.sendBroadcast(intent)
+        }
+
+        // Notifica o provider do widget de gráfico
+        Intent(context, BatteryGraphWidgetProvider::class.java).also { intent ->
+            intent.action = BatteryGraphWidgetProvider.ACTION_WIDGET_UPDATE_GRAPH_ONLY
+            val ids = AppWidgetManager.getInstance(context).getAppWidgetIds(android.content.ComponentName(context, BatteryGraphWidgetProvider::class.java))
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+            context.sendBroadcast(intent)
         }
     }
 }

@@ -1,38 +1,26 @@
+// app/src/main/java/com/em/batterywidget/BatteryLog.kt
 package com.em.batterywidget
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * Database entity for logging battery status over time.
- * Corrige redeclaração de BatteryLog.
+ * Entidade do Room que representa um único registro de log da bateria no banco de dados.
+ * Esta é a nossa
+única fonte de verdade para os dados da bateria.
  */
-@Entity(tableName = "battery_logs")
+@Entity(tableName = "battery_log")
 data class BatteryLog(
-    // timestamp em milissegundos é a chave primária
-    @PrimaryKey
-    val timestampMillis: Long,
-    val level: Int,
-    val status: String, // Nome do Enum
-    val plugged: String, // Nome do Enum
-    val health: String, // Nome do Enum
-    val temperature: Int, // deciCelsius
-    val voltage: Int, // millivolts
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val timestampMillis: Long = System.currentTimeMillis(),
+    val level
+    : Int, // Nível percentual (0-100)
+    val status: Int, // Constantes do BatteryManager (e.g., BATTERY_STATUS_CHARGING)
+    val health: Int, // Constantes do BatteryManager
+    val plugged: Int, // Constantes do BatteryManager
+    val temperature
+    : Int, // Em décimos de grau Celsius
+    val voltage: Int, // Em milivolts
     val technology: String
-) {
-    // Helper para converter BatteryInfo para BatteryLog para inserção
-    companion object {
-        fun fromBatteryInfo(info: BatteryInfo): BatteryLog {
-            return BatteryLog(
-                timestampMillis = info.timestamp,
-                level = info.level,
-                status = info.status.name,
-                plugged = info.plugged.name,
-                health = info.health.name,
-                temperature = info.temperature,
-                voltage = info.voltage,
-                technology = info.technology
-            )
-        }
-    }
-}
+)

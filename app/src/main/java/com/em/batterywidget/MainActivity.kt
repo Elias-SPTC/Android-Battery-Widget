@@ -2,72 +2,46 @@ package com.em.batterywidget
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
-import com.em.batterywidget.ui.BatteryLogAdapter
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import android.widget.Toast
 
-/**
- * A atividade principal da aplicação que exibe o histórico de logs da bateria.
- *
- * Usa Koin para injetar o BatteryViewModel e LiveData para observar as alterações no banco de dados.
- */
 class MainActivity : AppCompatActivity() {
 
-    // Injeção do ViewModel usando Koin
+    // CORRIGIDO: Injeta o ViewModel usando Koin
     private val batteryViewModel: BatteryViewModel by viewModel()
-
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var emptyStateTextView: TextView
-    private lateinit var fabClearLogs: FloatingActionButton
-    private val logAdapter = BatteryLogAdapter()
+    private lateinit var logAdapter: BatteryLogAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Certifique-se de que o layout XML foi criado em 'res/layout/activity_main.xml'
+        // CORRIGIDO: Usa o novo layout que acabamos de criar
         setContentView(R.layout.activity_main)
 
-        // Inicializar Views
-        recyclerView = findViewById(R.id.recycler_view_logs)
-        emptyStateTextView = findViewById(R.id.tv_empty_state)
-        fabClearLogs = findViewById(R.id.fab_clear_logs)
+        val recyclerView: RecyclerView = findViewById(R.id.recycler_view_logs)
+        val emptyStateTextView: View = findViewById(R.id.tv_empty_state)
+        val fabClearLogs: FloatingActionButton = findViewById(R.id.fab_clear_logs)
 
-        // Configurar RecyclerView
+        logAdapter = BatteryLogAdapter()
         recyclerView.adapter = logAdapter
-        recyclerView.addItemDecoration(
-            DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
-        )
+        recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
 
-        // Observar dados do ViewModel
-        observeBatteryLogs()
+        // CORRIGIDO: Observa o Flow de dados do ViewModel
+        lifecycleScope.launch {
+            batteryViewModel.allLogs.collectLatest { logs ->
+                logAdapter.submitList(logs)
+                emptyStateTextView.visibility = if (logs.isEmpty()) View.VISIBLE else View.GONE
+            }
+        }
 
-        // Configurar o botão para limpar logs
         fabClearLogs.setOnClickListener {
             batteryViewModel.clearAllLogs()
-            Toast.makeText(this, "Logs de bateria limpos.", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    /**
-     * Configura a observação do LiveData de logs de bateria.
-     */
-    private fun observeBatteryLogs() {
-        batteryViewModel.allLogs.observe(this) { logs ->
-            // Atualiza o Adapter com a nova lista de logs
-            logAdapter.submitList(logs)
-
-            // Alterna o estado vazio
-            if (logs.isEmpty()) {
-                recyclerView.visibility = View.GONE
-                emptyStateTextView.visibility = View.VISIBLE
-            } else {
-                recyclerView.visibility = View.VISIBLE
-                emptyStateTextView.visibility = View.GONE
-            }
+            Toast.makeText(this, "Histórico de bateria limpo", Toast.LENGTH_SHORT).show()
         }
     }
 }

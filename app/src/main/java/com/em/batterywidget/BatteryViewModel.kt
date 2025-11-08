@@ -1,37 +1,31 @@
 package com.em.batterywidget
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import com.em.batterywidget.data.BatteryLog
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel responsável por expor os dados de log da bateria para a UI.
- *
- * Utiliza o Koin para injetar o BatteryRepository.
+ * ViewModel para a MainActivity, fornecendo dados do histórico de bateria.
  */
 class BatteryViewModel(
-    private val repository: BatteryRepository
+    private val batteryRepository: BatteryRepository,
+    private val dataStoreManager: BatteryDataStoreManager // Mantido para futuras preferências
 ) : ViewModel() {
 
-    // LiveData que observa todos os logs de bateria do repositório.
-    // O Flow do Room é convertido para LiveData para ser consumido pela UI.
-    val allLogs: LiveData<List<BatteryLog>> = repository.getAllLogs().asLiveData(viewModelScope.coroutineContext)
+    /**
+     * Expõe o Flow de todos os logs de bateria, vindo diretamente do repositório.
+     * A MainActivity observará este Flow para atualizar a UI.
+     */
+    val allLogs: Flow<List<BatteryLog>> = batteryRepository.getAllLogs()
 
     /**
-     * Função para forçar a exclusão de todos os logs.
-     * Útil para fins de teste ou se o usuário quiser limpar o histórico.
+     * Inicia a operação para limpar todos os logs do banco de dados.
+     * A operação é delegada para o repositório e executada em uma coroutine.
      */
-    fun clearAllLogs() = viewModelScope.launch {
-        repository.clearAllLogs()
+    fun clearAllLogs() {
+        viewModelScope.launch {
+            batteryRepository.clearAllLogs()
+        }
     }
 }
-
-/**
- * Extensão para injetar o BatteryViewModel usando Koin, garantindo que
- * o módulo do ViewModel seja registrado no Koin (faremos isso a seguir).
- */
-// NOTA: Esta extensão será usada na MainActivity, mas o módulo Koin do ViewModel
-// precisa ser adicionado ao KoinModules.kt.

@@ -1,204 +1,85 @@
 package com.em.batterywidget
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
-import android.graphics.Color
-import android.util.Log
+import android.content.Intent
+import android.os.BatteryManager
+import android.view.View
 import android.widget.RemoteViews
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
-import java.util.*
+import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-/**
- * Utilitário estático para gerenciar a persistência do tipo de widget e a lógica
- * de atualização dos diferentes layouts de widget.
- */
-object WidgetUpdater {
-    private const val TAG = "WidgetUpdater"
+object WidgetUpdater : KoinComponent {
 
-    // Chave para armazenar o tipo de layout do widget no DataStore, usando o ID do widget como sufixo.
-    private fun widgetTypeKey(appWidgetId: Int) = intPreferencesKey("widget_type_$appWidgetId")
+    private val repository: BatteryRepository by inject()
+    private val coroutineScope = CoroutineScope(Dispatchers.IO + Job())
 
-    // Nome do DataStore para as preferências de widget.
-    private const val WIDGET_PREFS_NAME = "widget_preferences"
+    // CORRIGIDO: Constantes agora são públicas e acessíveis pela WidgetActivity
+    const val TYPE_ICON_DETAIL = 0
+    const val TYPE_GRAPH = 1
+    const val TYPE_TEXT_ONLY = 2
 
-    // Inicialização do DataStore, necessário para persistência de dados no Android moderno.
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = WIDGET_PREFS_NAME)
+    fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+        coroutineScope.launch {
+            val widgetType = repository.widgetPreferencesFlow.first().widgetType[appWidgetId] ?: TYPE_ICON_DETAIL
+            val latestLog = repository.getLatestBatteryLog().first()
 
-    /**
-     * Salva o tipo de layout configurado para um widget específico.
-     * Deve ser chamado durante o processo de configuração (WidgetActivity).
-     */
-    fun saveWidgetType(context: Context, appWidgetId: Int, type: Int) = runBlocking {
-        Log.d(TAG, "Salvando tipo $type para widget $appWidgetId")
-        context.dataStore.edit { preferences ->
-            preferences[widgetTypeKey(appWidgetId)] = type
+            CoroutineScope(Dispatchers.Main).launch {
+                val views = when (widgetType) {
+                    TYPE_ICON_DETAIL -> createIconDetailView(context, latestLog)
+                    TYPE_TEXT_ONLY -> createTextOnlyView(context, latestLog)
+                    else -> createIconDetailView(context, latestLog)
+                }
+                appWidgetManager.updateAppWidget(appWidgetId, views)
+            }
         }
     }
 
-    /**
-     * Carrega o tipo de layout para um widget específico.
-     */
-    fun loadWidgetType(context: Context, appWidgetId: Int): Int? = runBlocking {
-        // Assume-se que BatteryWidgetProvider.LAYOUT_ICON_DETAIL é o padrão (1)
-        val key = widgetTypeKey(appWidgetId)
-        return@runBlocking context.dataStore.data.map { preferences ->
-            preferences[key]
-        }.first()
+    private fun createIconDetailView(context: Context, log: BatteryLog?): RemoteViews {
+        val views = RemoteViews(context.packageName, R.layout.widget_battery_icon_detail)
+        if (log != null) {
+            views.setTextViewText(R.id.battery_level_text, "${log.level}")
+        } else {
+            views.setTextViewText(R.id.battery_level_text, "N/A")
+        }
+        views.setOnClickPendingIntent(R.id.widget_root_layout, getLaunchAppPendingIntent(context))
+        return views
     }
 
-    /**
-     * Exclui o tipo de layout (e a persistência) para um widget que foi removido.
-     */
-    fun deleteWidgetType(context: Context, appWidgetId: Int) = runBlocking {
-        Log.d(TAG, "Excluindo tipo para widget $appWidgetId")
-        context.dataStore.edit { preferences ->
-            preferences.remove(widgetTypeKey(appWidgetId))
+    private fun createTextOnlyView(context: Context, log: BatteryLog?): RemoteViews {
+        val views = RemoteViews(context.packageName, R.layout.widget_battery_text_only)
+        if (log != null) {
+            val isCharging = log.status == BatteryManager.BATTERY_STATUS_CHARGING
+
+            views.setTextViewText(R.id.battery_level_text_only, "${log.level}%")
+            
+            views.setProgressBar(R.id.battery_progress_bar, 100, log.level, false)
+
+            views.setViewVisibility(R.id.charging_bolt_icon, if (isCharging) View.VISIBLE else View.GONE)
+
+        } else {
+            views.setTextViewText(R.id.battery_level_text_only, "N/A")
+            views.setProgressBar(R.id.battery_progress_bar, 100, 0, false)
+            views.setViewVisibility(R.id.charging_bolt_icon, View.GONE)
+        }
+        views.setOnClickPendingIntent(R.id.widget_text_container, getLaunchAppPendingIntent(context))
+        return views
+    }
+
+    fun deleteWidgetPreferences(appWidgetIds: IntArray) {
+        coroutineScope.launch {
+            appWidgetIds.forEach { repository.deleteWidgetType(it) }
         }
     }
 
-    // --- Lógica de Atualização de Layouts ---
-
-    /**
-     * Atualiza o widget com o layout de Ícone e Detalhe (widget_battery.xml).
-     */
-    fun updateIconDetailWidget(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int
-    ) {
-        val batteryInfo = getLatestBatteryInfo(context)
-        val views = RemoteViews(context.packageName, R.layout.widget_battery)
-
-        // 1. Configurar o estado da bateria (ícone, texto, cor)
-        views.setTextViewText(R.id.text_battery_level, "${batteryInfo.level}%")
-
-        val statusText = getBatteryStatusText(context, batteryInfo)
-        views.setTextViewText(R.id.text_battery_status, statusText)
-
-        // 2. Renderização do ícone (simulando a mudança do ícone com o nível e status)
-        val batteryIconRes = BatteryRenderer.getBatteryIcon(batteryInfo.level, batteryInfo.isCharging)
-        views.setImageViewResource(R.id.battery_icon, batteryIconRes)
-        views.setTextColor(
-            R.id.text_battery_level,
-            BatteryRenderer.getBatteryColor(batteryInfo.level, batteryInfo.isCharging)
-        )
-
-        // 3. Configurar a ação de clique (por exemplo, abrir a MainActivity)
-        views.setOnClickPendingIntent(
-            R.id.widget_container,
-            BatteryWidgetUtils.getLaunchAppPendingIntent(context)
-        )
-
-        appWidgetManager.updateAppWidget(appWidgetId, views)
-    }
-
-    /**
-     * Atualiza o widget com o layout de Gráfico e Histórico (widget_battery_graph.xml).
-     *
-     * Este é o layout mais complexo, pois o gráfico precisa ser desenhado em um Bitmap
-     * e depois definido na ImageView do RemoteViews.
-     */
-    fun updateGraphHistoryWidget(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int
-    ) {
-        val batteryInfo = getLatestBatteryInfo(context)
-        val views = RemoteViews(context.packageName, R.layout.widget_battery_graph)
-
-        views.setTextViewText(R.id.text_graph_level, "${batteryInfo.level}%")
-        views.setTextViewText(
-            R.id.text_graph_status,
-            getBatteryStatusText(context, batteryInfo)
-        )
-
-        // 1. Simulação do Desenho do Gráfico
-        // Esta é uma parte CRÍTICA: RemoteViews não suporta Canvas ou desenho complexo.
-        // Precisamos:
-        // a) Obter os dados históricos (do BatteryDatabase/DataStore).
-        // b) Desenhar o gráfico em um Bitmap usando a classe BatteryRenderer/GraphRenderer.
-        // c) Converter o Bitmap em um objeto Bundle/Image.
-
-        // Por enquanto, apenas atualizamos o texto para indicar que a lógica está aqui
-        views.setTextViewText(R.id.text_graph_placeholder, "Gráfico Pendente: ${Date().time}")
-        views.setTextColor(R.id.text_graph_level, Color.WHITE)
-
-        // TODO: Chamar GraphRenderer.renderGraphBitmap(context, dataHistorico)
-        // O bitmap resultante seria definido assim:
-        // views.setImageViewBitmap(R.id.image_graph, bitmap)
-
-        views.setOnClickPendingIntent(
-            R.id.widget_graph_container,
-            BatteryWidgetUtils.getLaunchAppPendingIntent(context)
-        )
-
-        appWidgetManager.updateAppWidget(appWidgetId, views)
-    }
-
-    /**
-     * Atualiza o widget com o layout Minimalista de Texto (widget_battery_text.xml).
-     */
-    fun updateTextOnlyWidget(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int
-    ) {
-        val batteryInfo = getLatestBatteryInfo(context)
-        val views = RemoteViews(context.packageName, R.layout.widget_battery_text)
-
-        // Configura o texto principal
-        views.setTextViewText(R.id.text_level_only, "${batteryInfo.level}%")
-        views.setTextColor(
-            R.id.text_level_only,
-            BatteryRenderer.getBatteryColor(batteryInfo.level, batteryInfo.isCharging)
-        )
-
-        // Configura o texto de status (se houver espaço e se o widget for grande o suficiente)
-        val statusText = getBatteryStatusText(context, batteryInfo)
-        views.setTextViewText(R.id.text_status_only, statusText)
-
-        views.setOnClickPendingIntent(
-            R.id.widget_text_container,
-            BatteryWidgetUtils.getLaunchAppPendingIntent(context)
-        )
-
-        appWidgetManager.updateAppWidget(appWidgetId, views)
-    }
-
-    // --- Funções de Suporte ---
-
-    /**
-     * Obtém as informações mais recentes da bateria (simuladas por enquanto).
-     * Idealmente, isso chamaria BatteryMonitor para obter os dados reais.
-     */
-    private fun getLatestBatteryInfo(context: Context): BatteryInfo {
-        // TODO: Substituir pela chamada real ao BatteryMonitor (que lê o Intent ACTION_BATTERY_CHANGED)
-        // Por enquanto, retorna dados simulados.
-        // Exemplo: Simular 85% e carregando
-        return BatteryInfo(
-            level = 85,
-            isCharging = true,
-            status = BatteryInfo.Status.CHARGING
-        )
-    }
-
-    /**
-     * Retorna uma string de status formatada.
-     */
-    private fun getBatteryStatusText(context: Context, info: BatteryInfo): String {
-        return when (info.status) {
-            BatteryInfo.Status.CHARGING -> if (info.level == 100) "Totalmente Carregado" else "Carregando"
-            BatteryInfo.Status.DISCHARGING -> "Descarga"
-            BatteryInfo.Status.FULL -> "Totalmente Carregado"
-            BatteryInfo.Status.NOT_CHARGING -> "Não Carregando"
-            BatteryInfo.Status.UNKNOWN -> "Desconhecido"
-        }
+    private fun getLaunchAppPendingIntent(context: Context): PendingIntent {
+        val intent = Intent(context, MainActivity::class.java)
+        return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 }

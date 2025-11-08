@@ -2,23 +2,29 @@ package com.em.batterywidget
 
 import android.app.Application
 import android.util.Log
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
 
 /**
  * Classe Application customizada para configurações de inicialização global.
- * Centraliza a inicialização do Room Database e outras configurações de serviços.
+ * Agora é responsável por iniciar o Koin para Injeção de Dependência.
  */
 class BatteryApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d("BatteryApplication", "Aplicação inicializada.")
-        // Inicialização global de serviços (como o WorkManager) que podem ser
-        // acessados via WorkManagerInitializer.
 
-        // O Room Database será inicializado sob demanda, mas aqui é o ponto
-        // ideal para qualquer configuração de bibliotecas de terceiros.
+        // Inicializa o Koin (Kotlin dependency injection framework)
+        startKoin {
+            // Passa o contexto da aplicação para que as dependências
+            // que precisam do Context (como Room e DataStore) possam obtê-lo.
+            androidContext(this@BatteryApplication)
 
-        // Garante que o WorkManager é configurado corretamente via nosso Initializer
-        // que é registrado no Manifest.
+            // Carrega o módulo que definimos (appModule).
+            // Como está no mesmo pacote, não precisa de import.
+            modules(appModule)
+        }
+
+        Log.d("BatteryApplication", "Aplicação e Koin inicializados.")
     }
 }

@@ -1,28 +1,47 @@
 package com.em.batterywidget
 
 import android.app.Application
-import com.em.batterywidget.di.allModules // Importa a lista de todos os módulos Koin unificados
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
-import org.koin.core.logger.Level
-import org.koin.android.ext.koin.androidLogger
+import java.util.concurrent.TimeUnit
 
-/**
- * Classe de Aplicação principal para inicializar o Koin e outros componentes globais.
- */
 class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
 
-        // Inicia o Koin
         startKoin {
-            // Define o nível de log do Koin. Use Level.ERROR para produção ou Level.DEBUG para depuração.
-            androidLogger(Level.ERROR)
-            // Usa o contexto da aplicação
             androidContext(this@App)
-            // Carrega a lista de todos os módulos de injeção unificados
-            modules(allModules)
+            modules(di)
         }
+
+        // Agenda o trabalho periódico para atualizar a bateria
+        scheduleBatteryWorker()
+    }
+
+    private fun scheduleBatteryWorker() {
+        // Define as restrições (opcional, mas bom para economizar bateria)
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+            .build()
+
+        // Cria um pedido de trabalho periódico para ser executado a cada 15 minutos
+        val workRequest = PeriodicWorkRequestBuilder<BatteryWorker>(
+            15, TimeUnit.MINUTES
+        )
+            .setConstraints(constraints)
+            .build()
+
+        // Enfileira o trabalho, garantindo que apenas uma instância com este nome exista
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "BatteryUpdateWork",
+            ExistingPeriodicWorkPolicy.KEEP, // Mantém o trabalho existente se já estiver agendado
+            workRequest
+        )
     }
 }

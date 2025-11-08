@@ -2,12 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- PERMISSÕES NECESSÁRIAS -->
-    <!-- 1. Receber as mudanças de bateria. Esta é uma Broadcast Protegida, mas é bom indicá-la. -->
-    <uses-permission android:name="android.permission.BROADCAST_STICKY" />
+    <!-- Permissão para reagir ao boot e reiniciar o monitoramento -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:name=".BatteryWidgetApplication"
+        android:name=".App" 
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -18,7 +17,7 @@
         android:theme="@style/Theme.BatteryWidget"
         tools:targetApi="31">
 
-        <!-- Atividade Principal (Manteremos como está) -->
+        <!-- Atividade Principal (Launcher) -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -28,33 +27,49 @@
             </intent-filter>
         </activity>
 
-        <!-- 1. DECLARAÇÃO DO WIDGET PROVIDER (BatteryAppWidgetProvider) -->
+        <!-- Atividade de Configuração do Widget -->
+        <activity
+            android:name=".WidgetActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Dialog">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <!-- Provedor para os Widgets Simples (Ícone, Texto) -->
         <receiver
-            android:name=".widget.BatteryAppWidgetProvider"
+            android:name=".BatteryWidgetProvider"
             android:exported="false">
             <intent-filter>
-                <!-- Ação padrão para todos os widgets (quando são adicionados/atualizados) -->
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <!-- Nossa ação personalizada para forçar atualizações -->
-                <action android:name="com.example.widget.batterywidget.ACTION_UPDATE_WIDGET" />
             </intent-filter>
-            <!-- Metadados que apontam para o XML de configuração do widget -->
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/battery_app_widget_info" />
+                android:resource="@xml/battery_widget_info" />
         </receiver>
 
-
-        <!-- 2. DECLARAÇÃO DO BROADCAST RECEIVER (BatteryBroadcastReceiver) -->
-        <!-- Este receiver é o que escuta as mudanças reais da bateria -->
+        <!-- Provedor para o Widget de Gráfico -->
         <receiver
-            android:name=".util.BatteryBroadcastReceiver"
+            android:name=".BatteryGraphWidgetProvider"
             android:exported="false">
             <intent-filter>
-                <!-- O sistema de bateria envia esta intenção em qualquer mudança relevante -->
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/battery_graph_widget_info" />
+        </receiver>
+        
+        <!-- Nosso BroadcastReceiver principal para capturar o estado da bateria -->
+        <receiver
+            android:name=".BatteryBroadcastReceiver"
+            android:exported="true">
+            <intent-filter>
                 <action android:name="android.intent.action.BATTERY_CHANGED" />
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
                 <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 

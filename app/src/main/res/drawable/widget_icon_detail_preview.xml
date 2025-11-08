@@ -40,7 +40,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Status: Charging"
-            android:textColor="@color/charging_color"
+            android:textColor="@color/color_charging"
             android:textSize="12sp"/>
 
     </LinearLayout>

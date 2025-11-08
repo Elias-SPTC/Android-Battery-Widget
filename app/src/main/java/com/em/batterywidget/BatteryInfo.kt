@@ -18,7 +18,9 @@ data class BatteryInfo(
     val health: BatteryHealthStatus,
     val voltage: Int, // mV
     val temperature: Float, // Degrees Celsius
-    val technology: String?
+    val technology: String?,
+    // Adicionando um campo timestamp, necessário para o Monitor (e Room/Log)
+    val timestamp: Long = System.currentTimeMillis()
 ) {
     /**
      * Companion object for creating a BatteryInfo instance by reading the
@@ -57,7 +59,8 @@ data class BatteryInfo(
                 health = BatteryHealthStatus.fromCode(healthInt),
                 voltage = voltageInt,
                 temperature = temperature,
-                technology = technologyStr
+                technology = technologyStr,
+                timestamp = System.currentTimeMillis() // Define o timestamp na criação
             )
         }
     }
@@ -108,8 +111,6 @@ enum class BatteryHealthStatus(val healthCode: Int) {
     OVERHEAT(BatteryManager.BATTERY_HEALTH_OVERHEAT),
     DEAD(BatteryManager.BATTERY_HEALTH_DEAD),
 
-    // FIX APLICADO AQUI: Corrigindo o erro de compilação na linha 43 (BATTERY_HEALTH_OVERVOLTAGE)
-    // A constante correta é BATTERY_HEALTH_OVER_VOLTAGE (com um underscore).
     OVER_VOLTAGE(BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE),
 
     FAILURE(BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE),

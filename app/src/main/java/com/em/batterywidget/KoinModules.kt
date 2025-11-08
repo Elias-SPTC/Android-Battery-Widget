@@ -1,52 +1,40 @@
-package com.em.batterywidget.di
+// app/src/main/java/com/em/batterywidget/KoinModules.kt
+package com.em.batterywidget
 
 import androidx.room.Room
-import com.em.batterywidget.BatteryDataStoreManager
-import com.em.batterywidget.BatteryDatabase
-import com.em.batterywidget.BatteryRepository
-import com.em.batterywidget.BatteryViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 /**
- * Módulos Koin para injeção de dependência da aplicação, unificados e estruturados.
- * Inclui o Database, Repositório, ViewModel e DataStore.
+ * Módulo Koin que define como criar todas as dependências da nossa aplicação.
  */
+val appModule = module {
 
-val databaseModule = module {
-    // Single instance do Room Database
+    // Definição de como criar o BatteryDatabase (Singleton)
     single {
         Room.databaseBuilder(
             androidContext(),
             BatteryDatabase::class.java,
-            "battery_log_db" // Nome do DB mantido do seu sistema
+            "battery_history_db"
         ).build()
     }
 
-    // Provedor para o DAO (BatteryLogDao), a partir da instância do banco de dados
-    single { get<BatteryDatabase>().batteryLogDao() }
-}
+    // Definição de como criar o BatteryLogDao (obtido a partir do Database)
+    factory { get<BatteryDatabase>().batteryLogDao() }
 
-val repositoryModule = module {
-    // Single instance do Repositório, injetando o DAO necessário
-    single { BatteryRepository(get()) }
-}
-
-val viewModelModule = module {
-    // ViewModel: Injeta o BatteryRepository no BatteryViewModel
-    viewModel { BatteryViewModel(get()) }
-}
-
-val dataStoreModule = module {
-    // Provedor para o DataStoreManager, essencial para salvar configurações do widget
+    // Definição de como criar o BatteryDataStoreManager (Singleton)
     single { BatteryDataStoreManager(androidContext()) }
+
+    // Definição de como criar o BatteryRepository (Singleton)
+    single { BatteryRepository(get(), get()) }
+
+    // Definição de como criar o BatteryViewModel
+    viewModel { BatteryViewModel(get(), get()) }
+
+    // Definição de como criar o WidgetUpdater (Singleton)
+    single { WidgetUpdater }
 }
 
-// Lista que contém todos os módulos para inicialização do Koin
-val allModules = listOf(
-    databaseModule,
-    repositoryModule,
-    viewModelModule,
-    dataStoreModule // Adicionado o módulo do DataStore para injeção completa de dependências
-)
+// Variável esperada por App.kt (para compatibilidade com a versão antiga)
+val di = listOf(appModule)

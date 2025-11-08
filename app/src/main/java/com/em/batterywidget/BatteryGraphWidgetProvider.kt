@@ -5,139 +5,109 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.util.Log
-import android.util.SizeF
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.os.BatteryManager
+import android.view.View
 import android.widget.RemoteViews
-import androidx.room.Room
-import kotlinx.coroutines.*
-import java.text.SimpleDateFormat
-import java.util.*
-import kotlin.math.roundToInt
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-/**
- * AppWidgetProvider para o widget de gráfico de histórico da bateria.
- * Carrega dados do Room e usa BatteryRenderer para desenhar o gráfico em um Bitmap.
- */
-class BatteryGraphWidgetProvider : AppWidgetProvider() {
+class BatteryGraphWidgetProvider : AppWidgetProvider(), KoinComponent {
 
-    private val TAG = "BatteryGraphWidgetProvider"
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private lateinit var db: BatteryDatabase // Inicializado em onUpdate/onEnabled
-    private lateinit var renderer: BatteryRenderer
+    private val repository: BatteryRepository by inject()
+    private val coroutineScope = CoroutineScope(Dispatchers.IO + Job())
+
+    // CORRIGIDO: Adicionando de volta o companion object com a constante necessária.
+    companion object {
+        const val ACTION_WIDGET_UPDATE_GRAPH_ONLY = "com.em.batterywidget.ACTION_WIDGET_UPDATE_GRAPH_ONLY"
+    }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        initializeComponents(context)
-        Log.d(TAG, "onUpdate chamado para Widget de Gráfico: ${appWidgetIds.size} widgets.")
-
-        // Garante que o serviço de monitoramento esteja ativo
-        AppWidgetUtils.startMonitorService(context)
-
-        for (appWidgetId in appWidgetIds) {
-            updateGraphWidget(context, appWidgetManager, appWidgetId)
+        appWidgetIds.forEach { appWidgetId ->
+            updateAppWidget(context, appWidgetManager, appWidgetId)
         }
     }
 
-    override fun onEnabled(context: Context) {
-        super.onEnabled(context)
-        initializeComponents(context)
-        Log.i(TAG, "Widget de Gráfico Ativado.")
-    }
-
-    override fun onDisabled(context: Context) {
-        super.onDisabled(context)
-        scope.cancel()
-        // Não paramos o serviço aqui, pois o BatteryWidgetProvider pode ainda estar ativo.
-        // O MonitorService gerencia sua própria parada quando não há mais widgets.
-        Log.i(TAG, "Widget de Gráfico Desativado.")
-    }
-
-    override fun onAppWidgetOptionsChanged(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, newOptions: android.os.Bundle) {
-        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
-        // Redesenha o gráfico se as dimensões mudarem
-        updateGraphWidget(context, appWidgetManager, appWidgetId)
-    }
-
-    /**
-     * Inicializa o banco de dados e o renderizador.
-     */
-    private fun initializeComponents(context: Context) {
-        if (!::db.isInitialized) {
-            db = Room.databaseBuilder(
-                context.applicationContext,
-                BatteryDatabase::class.java,
-                BatteryDatabase.DATABASE_NAME
-            ).build()
-            renderer = BatteryRenderer(context)
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == ACTION_WIDGET_UPDATE_GRAPH_ONLY) {
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val componentName = android.content.ComponentName(context, BatteryGraphWidgetProvider::class.java)
+            val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
+            onUpdate(context, appWidgetManager, appWidgetIds)
         }
+        super.onReceive(context, intent)
     }
 
-    /**
-     * Lógica principal de atualização: busca dados, desenha o Bitmap e atualiza o RemoteViews.
-     */
-    private fun updateGraphWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
-        scope.launch {
-            try {
-                val views = RemoteViews(context.packageName, R.layout.widget_battery_graph)
+    private fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+        coroutineScope.launch {
+            val history = repository.getHistory().first()
+            val latestLog = repository.getLatestBatteryLog().first()
 
-                // 1. Obter as dimensões atuais do widget
-                val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
-                // Largura e altura mínima em DP
-                val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
-                val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+            val graphBitmap = drawGraphToBitmap(context, history)
 
-                // Converter DP para PX
-                val density = context.resources.displayMetrics.density
-                val widthPx = (minWidth * density).roundToInt()
-                val heightPx = (minHeight * density).roundToInt()
+            CoroutineScope(Dispatchers.Main).launch {
+                val views = RemoteViews(context.packageName, R.layout.battery_graph_widget_layout)
 
-                // Dimensões do ImageView do gráfico dentro do padding de 8dp
-                val graphMargin = (8 * density).roundToInt()
-                // A altura do gráfico é aproximadamente a altura total menos o padding top/bottom (8*2)
-                // e menos a altura do título e rodapé (aprox. 30dp)
-                val graphHeightEstimate = heightPx - (2 * graphMargin) - (30 * density).roundToInt()
+                views.setImageViewBitmap(R.id.iv_battery_graph, graphBitmap)
 
-                // 2. Buscar Dados do Histórico (últimas 24h)
-                val yesterday = System.currentTimeMillis() - (24 * 60 * 60 * 1000)
-                val history = db.batteryDao().getEntriesSince(yesterday)
-
-                // 3. Desenhar o Gráfico (usando a largura total do widget e a altura estimada)
-                val graphBitmap = renderer.drawGraph(
-                    history = history,
-                    width = widthPx,
-                    height = graphHeightEstimate // Usamos a altura estimada para o desenho
-                )
-
-                // 4. Preencher a RemoteViews
-
-                // Exibe o Bitmap desenhado
-                views.setImageViewBitmap(R.id.image_battery_graph, graphBitmap)
-
-                // Texto do Nível Atual (opcional, para conveniência)
-                val latestInfo = BatteryManager.getBatteryInfo(context)
-                views.setTextViewText(R.id.text_current_level_summary, "${latestInfo.level}%")
-
-                // Carimbo de Data/Hora (rodapé)
-                val timeFormat = SimpleDateFormat("dd/MM/yy - HH:mm:ss", Locale.getDefault())
-                val lastTimestamp = history.lastOrNull()?.timestamp ?: System.currentTimeMillis()
-                views.setTextViewText(R.id.text_graph_timestamp, "Última leitura: ${timeFormat.format(Date(lastTimestamp))}")
-
-                // Ação de clique para abrir a Atividade (aponta para o WidgetActivity)
-                val intent = Intent(context, WidgetActivity::class.java)
-                val pendingIntentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                if (latestLog != null) {
+                    val statusText = getStatusString(context, latestLog.status, latestLog.plugged)
+                    views.setTextViewText(R.id.tv_graph_footer_info, context.getString(R.string.graph_status_latest, latestLog.level, statusText))
                 } else {
-                    PendingIntent.FLAG_UPDATE_CURRENT
+                    views.setTextViewText(R.id.tv_graph_footer_info, context.getString(R.string.graph_no_data))
                 }
-                val pendingIntent = PendingIntent.getActivity(context, appWidgetId + 1, intent, pendingIntentFlags)
+
+                val intent = Intent(context, WidgetActivity::class.java).apply {
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                    action = "graph_widget_click_$appWidgetId"
+                }
+                val pendingIntent = PendingIntent.getActivity(context, appWidgetId, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                
                 views.setOnClickPendingIntent(R.id.widget_graph_container, pendingIntent)
 
-                // 5. Atualizar o widget
                 appWidgetManager.updateAppWidget(appWidgetId, views)
-
-            } catch (e: Exception) {
-                Log.e(TAG, "Erro ao atualizar widget de gráfico $appWidgetId: ${e.message}", e)
             }
         }
+    }
+
+    private fun drawGraphToBitmap(context: Context, history: List<BatteryLog>): Bitmap {
+        val width = 500
+        val height = 250
+        val graphView = BatteryGraphView(context).apply {
+            setHistoryData(history)
+        }
+        graphView.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+        )
+        graphView.layout(0, 0, width, height)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        graphView.draw(canvas)
+        return bitmap
+    }
+
+    private fun getStatusString(context: Context, status: Int, plugged: Int): String {
+        val statusResource = when (status) {
+            BatteryManager.BATTERY_STATUS_CHARGING -> {
+                when (plugged) {
+                    BatteryManager.BATTERY_PLUGGED_USB -> R.string.status_charging_usb
+                    BatteryManager.BATTERY_PLUGGED_AC -> R.string.status_charging_ac
+                    BatteryManager.BATTERY_PLUGGED_WIRELESS -> R.string.status_charging_wireless
+                    else -> R.string.status_charging
+                }
+            }
+            BatteryManager.BATTERY_STATUS_DISCHARGING -> R.string.status_discharging
+            BatteryManager.BATTERY_STATUS_NOT_CHARGING -> R.string.status_not_charging
+            BatteryManager.BATTERY_STATUS_FULL -> R.string.status_full
+            else -> R.string.status_unknown
+        }
+        return context.getString(statusResource)
     }
 }

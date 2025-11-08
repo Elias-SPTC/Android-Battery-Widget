@@ -1,7 +1,7 @@
 package com.em.batterywidget
 
+import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,26 +13,26 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 /**
- * Fragmento responsável por exibir o histórico de nível de bateria em um gráfico de linhas.
+ * Fragmento que exibe o histórico de nível de bateria usando a arquitetura moderna com ViewModel.
  */
 class BatteryHistoryFragment : Fragment() {
 
     private lateinit var lineChart: LineChart
-    private lateinit var batteryDao: BatteryDao
+    // CORRIGIDO: Injeta o ViewModel em vez de acessar o DAO diretamente
+    private val viewModel: BatteryViewModel by viewModel()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Infla o layout para este fragmento
         val view = inflater.inflate(R.layout.fragment_battery_history, container, false)
         lineChart = view.findViewById(R.id.battery_line_chart)
         return view
@@ -40,104 +40,91 @@ class BatteryHistoryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // Inicializa o DAO do banco de dados
-        batteryDao = BatteryDatabase.getDatabase(requireContext()).batteryDao()
-
-        // Configura a aparência inicial do gráfico
         setupChartAppearance()
-
-        // Carrega e exibe os dados
-        loadBatteryHistory()
+        observeBatteryHistory()
     }
 
-    /**
-     * Configura as propriedades visuais do gráfico (cores, eixos, legendas).
-     */
     private fun setupChartAppearance() {
-        lineChart.description.isEnabled = false // Desabilita a descrição no canto
+        lineChart.description.isEnabled = false
         lineChart.setTouchEnabled(true)
         lineChart.isDragEnabled = true
         lineChart.setScaleEnabled(true)
         lineChart.setPinchZoom(true)
+        lineChart.setNoDataText("Carregando histórico...")
+        lineChart.setNoDataTextColor(Color.WHITE)
 
-        // Eixo X
-        val xAxis = lineChart.xAxis
-        xAxis.position = XAxis.XAxisPosition.BOTTOM
-        xAxis.textColor = android.graphics.Color.WHITE
-        xAxis.setDrawGridLines(true)
-        xAxis.granularity = 1f // Intervalo mínimo de 1 (para rótulos de tempo)
-        xAxis.setAvoidFirstLastClipping(true)
+        lineChart.xAxis.apply {
+            position = XAxis.XAxisPosition.BOTTOM
+            textColor = Color.WHITE
+            setDrawGridLines(true)
+            granularity = 1f
+            setAvoidFirstLastClipping(true)
+        }
 
-        // Eixo Y (Esquerdo)
-        val leftAxis = lineChart.axisLeft
-        leftAxis.textColor = android.graphics.Color.WHITE
-        leftAxis.axisMinimum = 0f
-        leftAxis.axisMaximum = 100f // Nível da bateria é de 0 a 100
-        leftAxis.setDrawGridLines(true)
+        lineChart.axisLeft.apply {
+            textColor = Color.WHITE
+            axisMinimum = 0f
+            axisMaximum = 100f
+            setDrawGridLines(true)
+        }
 
-        // Eixo Y (Direito) - Desabilitado
         lineChart.axisRight.isEnabled = false
-
-        // Legenda
-        val legend = lineChart.legend
-        legend.textColor = android.graphics.Color.WHITE
+        lineChart.legend.textColor = Color.WHITE
     }
 
     /**
-     * Carrega o histórico de bateria do banco de dados e popula o gráfico.
+     * CORRIGIDO: Observa o Flow de logs do ViewModel.
      */
-    private fun loadBatteryHistory() {
+    private fun observeBatteryHistory() {
         lifecycleScope.launch {
-            val history = withContext(Dispatchers.IO) {
-                // Limita a 100 os pontos de dados mais recentes para melhor desempenho de visualização
-                batteryDao.getRecentHistory(100)
+            viewModel.allLogs.collectLatest { history ->
+                if (history.isNotEmpty()) {
+                    updateChart(history)
+                } else {
+                    lineChart.clear()
+                    lineChart.setNoDataText("Nenhum dado de histórico de bateria encontrado.")
+                    lineChart.invalidate()
+                }
             }
-            Log.d("BatteryHistoryFragment", "Carregado ${history.size} registros do histórico.")
-            updateChart(history)
         }
     }
 
     /**
-     * Prepara os dados do histórico para serem plotados no gráfico.
+     * CORRIGIDO: Usa a classe de dados correta, BatteryLog.
      */
-    private fun updateChart(history: List<BatteryRecord>) {
-        if (history.isEmpty()) {
-            lineChart.setNoDataText("Nenhum dado de histórico de bateria encontrado.")
-            return
+    private fun updateChart(history: List<BatteryLog>) {
+        // O gráfico espera que os dados estejam em ordem crescente de X (tempo)
+        val sortedHistory = history.sortedBy { it.timestampMillis }
+
+        val entries = sortedHistory.mapIndexed { index, log ->
+            Entry(index.toFloat(), log.level.toFloat())
         }
 
-        // Converte os registros do Room em objetos Entry do MPAndroidChart
-        val entries = history.mapIndexed { index, record ->
-            // Usamos o índice (index) como valor X para plotar
-            Entry(index.toFloat(), record.level.toFloat(), record)
+        val dataSet = LineDataSet(entries, "Nível da Bateria (%)").apply {
+            color = Color.parseColor("#4CAF50")
+            valueTextColor = Color.WHITE
+            setCircleColor(Color.parseColor("#8BC34A"))
+            circleRadius = 3f
+            lineWidth = 2f
+            setDrawValues(false)
         }
 
-        // Cria o DataSet
-        val dataSet = LineDataSet(entries, "Nível da Bateria (%)")
-        dataSet.color = android.graphics.Color.parseColor("#4CAF50") // Verde
-        dataSet.valueTextColor = android.graphics.Color.WHITE
-        dataSet.setCircleColor(android.graphics.Color.parseColor("#8BC34A"))
-        dataSet.circleRadius = 3f
-        dataSet.lineWidth = 2f
-        dataSet.setDrawValues(false) // Não desenha o valor em cada ponto
+        lineChart.data = LineData(dataSet)
 
-        val lineData = LineData(dataSet)
-        lineChart.data = lineData
-
-        // Configura o formatador do eixo X para mostrar a hora e a data.
-        val timestampFormatter = SimpleDateFormat("HH:mm\ndd/MM", Locale.getDefault())
+        // Formata o eixo X para mostrar data/hora
+        val timestampFormatter = SimpleDateFormat("HH:mm dd/MM", Locale.getDefault())
         lineChart.xAxis.valueFormatter = object : IndexAxisValueFormatter() {
             override fun getFormattedValue(value: Float): String {
                 val index = value.toInt()
-                if (index >= 0 && index < history.size) {
-                    val timestamp = history[index].timestamp
-                    return timestampFormatter.format(Date(timestamp))
+                return if (index >= 0 && index < sortedHistory.size) {
+                    val timestamp = sortedHistory[index].timestampMillis
+                    timestampFormatter.format(Date(timestamp))
+                } else {
+                    ""
                 }
-                return ""
             }
         }
 
-        lineChart.invalidate() // Atualiza o gráfico na tela
+        lineChart.invalidate()
     }
 }
