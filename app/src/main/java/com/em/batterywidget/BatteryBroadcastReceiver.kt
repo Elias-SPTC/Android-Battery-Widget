@@ -8,31 +8,24 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 
 /**
- * Recebe eventos importantes do sistema (boot, carregador conectado/desconectado)
- * para acionar uma atualização imediata da bateria usando um OneTimeWorkRequest.
+ * O único propósito deste Receiver é ouvir os eventos de energia e
+ * acionar o BatteryWorker para uma atualização imediata.
  */
 class BatteryBroadcastReceiver : BroadcastReceiver() {
 
     companion object {
-        private const val TAG = "BatteryReceiver"
+        private const val TAG = "PowerActionReceiver"
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
-        when (intent.action) {
-            Intent.ACTION_BOOT_COMPLETED -> {
-                Log.d(TAG, "Dispositivo reiniciado. A classe App irá reagendar o trabalho periódico.")
-                // A classe App cuida do agendamento periódico.
-            }
+    override fun onReceive(context: Context, intent: Intent?) {
+        val action = intent?.action ?: return
 
-            // Eventos que exigem uma atualização imediata.
-            Intent.ACTION_POWER_CONNECTED,
-            Intent.ACTION_POWER_DISCONNECTED,
-            Intent.ACTION_BATTERY_CHANGED -> {
-                Log.d(TAG, "Evento de bateria recebido (${intent.action}). Acionando o Worker.")
-                // Cria e enfileira um pedido de trabalho único para ser executado agora.
-                val oneTimeWorkRequest = OneTimeWorkRequestBuilder<BatteryWorker>().build()
-                WorkManager.getInstance(context).enqueue(oneTimeWorkRequest)
-            }
+        if (action == Intent.ACTION_POWER_CONNECTED || action == Intent.ACTION_POWER_DISCONNECTED) {
+            Log.d(TAG, "Evento de energia recebido: $action. Acionando o BatteryWorker.")
+            
+            // Cria e enfileira uma tarefa única e imediata.
+            val workRequest = OneTimeWorkRequestBuilder<BatteryWorker>().build()
+            WorkManager.getInstance(context).enqueue(workRequest)
         }
     }
 }

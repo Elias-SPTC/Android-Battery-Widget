@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Permissão adicionada para garantir a entrega de broadcasts em segundo plano -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:name=".App"
@@ -34,10 +36,9 @@
             </intent-filter>
         </activity>
 
-        <!-- CORRIGIDO: ÚNICO PONTO DE ENTRADA PARA TODOS OS WIDGETS -->
         <receiver
             android:name=".BatteryAppWidgetProvider"
-            android:exported="true" 
+            android:exported="true"
             android:label="Battery Widget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -47,8 +48,6 @@
                 android:resource="@xml/battery_widget_info" />
         </receiver>
 
-        <!-- O provider do gráfico foi removido para consolidar a lógica e remover a entrada duplicada. -->
-        
         <receiver
             android:name=".BatteryBroadcastReceiver"
             android:exported="true">

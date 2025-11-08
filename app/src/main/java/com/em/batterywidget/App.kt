@@ -1,6 +1,8 @@
 package com.em.batterywidget
 
 import android.app.Application
+import android.content.Intent
+import android.os.Build
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -20,28 +22,34 @@ class App : Application() {
             modules(di)
         }
 
-        // Agenda o trabalho periódico para atualizar a bateria
         scheduleBatteryWorker()
+        
+        // CORRIGIDO: Inicia o serviço de monitoramento em primeiro plano
+        startMonitorService()
     }
 
     private fun scheduleBatteryWorker() {
-        // Define as restrições (opcional, mas bom para economizar bateria)
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
             .build()
 
-        // Cria um pedido de trabalho periódico para ser executado a cada 15 minutos
         val workRequest = PeriodicWorkRequestBuilder<BatteryWorker>(
             15, TimeUnit.MINUTES
-        )
-            .setConstraints(constraints)
-            .build()
+        ).setConstraints(constraints).build()
 
-        // Enfileira o trabalho, garantindo que apenas uma instância com este nome exista
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "BatteryUpdateWork",
-            ExistingPeriodicWorkPolicy.KEEP, // Mantém o trabalho existente se já estiver agendado
+            ExistingPeriodicWorkPolicy.KEEP,
             workRequest
         )
+    }
+
+    private fun startMonitorService() {
+        val serviceIntent = Intent(this, BatteryMonitorService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
     }
 }
