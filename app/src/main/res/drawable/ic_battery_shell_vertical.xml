@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="200dp"
+    android:viewportWidth="100"
+    android:viewportHeight="200">
+
+    <!-- O terminal (polo positivo) da pilha -->
+    <path
+        android:fillColor="#B3FFFFFF" 
+        android:pathData="M35,0 L65,0 L65,10 L35,10 Z" />
+
+    <!-- O corpo (casca) da pilha -->
+    <path
+        android:fillColor="#00000000" 
+        android:strokeColor="#B3FFFFFF" 
+        android:strokeWidth="4"
+        android:pathData="M10,10 L90,10 L90,198 L10,198 Z" />
+
+</vector>

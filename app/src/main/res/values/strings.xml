@@ -1,166 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 0. Informações Básicas e Ações -->
     <string name="app_name">Battery Widget</string>
     <string name="action_settings">Configurações</string>
-    <string name="data_unavailable_short">N/D</string>
-    <string name="no_battery_data">Nenhum dado de bateria disponível.</string>
-    <string name="open_details_button">Abrir Detalhes da Bateria</string>
-
-    <!-- 1. Descrições de Widget e Acessibilidade -->
-    <string name="widget_title">Nível da Bateria</string>
-    <string name="widget_description">Um widget simples exibindo o status atual da bateria.</string>
-    <string name="graph_widget_title">Gráfico Histórico da Bateria</string>
-    <string name="graph_widget_description">Um widget que exibe o histórico de carga da bateria em um gráfico.</string>
-    <string name="battery_graph_description">Um gráfico mostrando o histórico de carga da bateria ao longo do tempo</string>
-    <string name="widget_graph_history_description">Widget de gráfico do histórico da bateria.</string>
-    <string name="widget_icon_detail_description">Ícone da bateria com widget de status detalhado.</string>
-    <string name="widget_text_only_description">Widget de nível de bateria apenas com texto.</string>
-    <string name="graph_description">Gráfico exibindo o histórico do nível da bateria ao longo do tempo.</string>
-    <string name="app_widget_description">Um widget que monitoriza o nível de bateria e o histórico de carregamento.</string>
-
-    <!-- Strings de Acessibilidade ESSENCIAIS -->
-    <string name="battery_icon_description">Ícone do nível de carga da bateria</string>
-    <string name="content_description_status_icon">Ícone de status de carregamento</string>
-    <string name="refresh_button_content_description">Atualizar status da bateria</string>
-    <string name="label_battery_widget">Bateria</string>
-    <string name="battery_level_icon_description">Ícone do nível atual da bateria.</string>
-    <string name="battery_status_charging_description">Ícone indicando que o dispositivo está carregando.</string>
-
-    <!-- Formato de detalhes do widget (Usando marcadores posicionais) -->
-    <string name="widget_details_format">Bateria em %1$s, %2$s</string>
-    <string name="widget_placeholder_text">Widget de Bateria</string>
-
-
-    <!-- 2. Strings de Configuração e Preferências -->
-    <string name="pref_category_general">Configurações Gerais</string>
-    <string name="pref_category_display">Opções de Exibição</string>
-    <string name="pref_category_graph">Visualização do Gráfico</string>
-    <string name="pref_category_monitoring">Monitoramento</string>
-    <string name="pref_category_graph_appearance">Aparência do Gráfico</string>
-
-    <!-- Configurações de Monitoramento -->
-    <string name="title_monitor_enabled">Habilitar Monitoramento</string>
-    <string name="key_monitor_enabled">monitor_enabled</string>
-    <string name="title_update_frequency">Frequência de Atualização</string>
-    <string name="key_update_frequency">update_frequency</string>
-    <string name="pref_update_frequency_summary">Com que frequência o widget é atualizado</string>
-
-    <!-- Frequências de Atualização (Valores de Preferência) -->
+    <string name="app_widget_description">Um widget que monitoriza o nível de bateria.</string>
+    <string name="graph_widget_title">Gráfico de Bateria</string>
+    <string name="battery_graph_description">Um gráfico do histórico da bateria.</string>
+    <string name="battery_icon_description">Ícone do nível da bateria.</string>
+    <string name="battery_level">Nível da Bateria</string>
+    <string name="widget_graph_history_description">Widget com gráfico do histórico.</string>
+    <string name="widget_icon_detail_description">Widget de ícone com detalhes.</string>
+    
+    <!-- STRINGS DE FREQUÊNCIA ADICIONADAS -->
     <string name="freq_5_minutes">5 Minutos</string>
     <string name="freq_15_minutes">15 Minutos</string>
     <string name="freq_30_minutes">30 Minutos</string>
     <string name="freq_1_hour">1 Hora</string>
 
-    <!-- Configurações de Exibição de Detalhes -->
-    <string name="pref_detail_info_title">Informações Detalhadas da Bateria</string>
-    <string name="pref_detail_info_summary">Mostra detalhes extras como voltagem, temperatura e saúde.</string>
-    <string name="textVoltage">Exibir Voltagem</string>
-    <string name="textTemperature">Exibir Temperatura</string>
-    <string name="textTechnology">Exibir Tecnologia</string>
-    <string name="textHealth">Exibir Saúde</string>
+    <!-- Status -->
+    <string name="status_charging">Carregando</string>
+    <string name="status_discharging">Descarregando</string>
+    <string name="status_full">Completa</string>
+    <string name="status_not_charging">Não Carregando</string>
+    <string name="status_unknown">Desconhecido</string>
 
-    <!-- Configurações de Aparência -->
-    <string name="pref_appearance_title">Aparência</string>
-    <string name="pref_text_size_title">Tamanho do Texto</string>
-    <string name="pref_text_size_summary">Ajuste o tamanho da exibição de texto no widget.</string>
-    <string name="pref_color_theme_title">Tema de Cores</string>
-    <string name="pref_color_theme_summary">Escolha o tema de cores do widget (Claro/Escuro/Transparente).</string>
-    <string name="textScale">Escala de Exibição</string>
-
-    <!-- Opções de tema (ListPreference) -->
-    <string name="theme_light">Claro</string>
-    <string name="theme_dark">Escuro</string>
-    <string name="theme_transparent">Transparente</string>
-
-    <string-array name="theme_entries">
-        <item>@string/theme_light</item>
-        <item>@string/theme_dark</item>
-        <item>@string/theme_transparent</item>
-    </string-array>
-    <string-array name="theme_values">
-        <item>light</item>
-        <item>dark</item>
-        <item>transparent</item>
-    </string-array>
-
-    <!-- Configurações do Gráfico -->
-    <string name="pref_graph_settings_title">Configurações do Gráfico</string>
-    <string name="pref_show_fill_title">Mostrar Área de Preenchimento</string>
-    <string name="pref_show_grid_title">Mostrar Linhas de Grade</string>
-    <string name="pref_line_width_title">Largura da Linha do Gráfico</string>
-    <string name="pref_line_width_summary">Defina a espessura da linha do gráfico.</string>
-    <string name="summary_graph_color">Cor da linha do gráfico.</string>
-    <string name="title_graph_color">Cor do Gráfico</string>
-    <string name="key_graph_color">graph_line_color</string>
-
-    <!-- 3. Status e Campos Detalhados (Labels e Valores) -->
-    <string name="textState">Status:</string>
-    <string name="textPlug">Conexão:</string>
-    <string name="textLevel">Nível:</string>
-    <string name="battery_level">Nível da Bateria</string>
-    <string name="battery_temperature_label">Temperatura:</string>
-    <string name="battery_voltage_label">Voltagem:</string>
-    <string name="battery_health_label">Saúde:</string>
-    <string name="battery_technology_label">Tecnologia:</string>
-
-    <!-- Formatos de Unidade -->
-    <string name="temperature_unit_celsius">°C</string>
-    <string name="temperature_unit_fahrenheit">°F</string>
-    <string name="format_voltage">%1$s mV</string>
-    <string name="format_temperature_celsius">%1$s °C</string>
-    <string name="format_temperature_fahrenheit">%1$s °F</string>
-
-    <!-- Status da Bateria (Valores) -->
-    <string name="battery_status_unknown">Desconhecido</string>
-    <string name="battery_status_charging">Carregando</string>
-    <string name="battery_status_discharging">Descarregando</string>
-    <string name="battery_status_not_charging">Não Carregando</string>
-    <string name="battery_status_full">Completa</string>
-
-    <string name="status_charging">A Carregar...</string>
-    <string name="status_charging_usb">A Carregar (USB)</string>
-    <string name="status_charging_ac">A Carregar (AC)</string>
-    <string name="status_charging_wireless">A Carregar (Wireless)</string>
-    <string name="status_discharging">A Descarregar</string>
-    <string name="status_not_charging">Não a Carregar</string>
-    <string name="status_full">Bateria Completa</string>
-    <string name="status_unknown">Status Desconhecido</string>
-
-    <!-- Conexão de Carregamento (Plugged) -->
-    <string name="battery_plugged_usb">USB</string>
-    <string name="battery_plugged_ac">AC</string>
-    <string name="battery_plugged_wireless">Sem Fio</string>
-    <string name="battery_plugged_none">Desconectado</string>
-    <string name="battery_plugged_unknown">Fonte Desconhecida</string>
-
-    <!-- Saúde da Bateria (Health) -->
-    <string name="health_good">Bom</string>
-    <string name="health_overheat">Superaquecimento</string>
+    <!-- Saúde -->
+    <string name="health_good">Boa</string>
+    <string name="health_overheat">Superaquecida</string>
     <string name="health_dead">Morta</string>
     <string name="health_over_voltage">Sobretensão</string>
-    <string name="health_failure">Falha Não Especificada</string>
     <string name="health_cold">Fria</string>
-    <string name="health_unknown">Saúde Desconhecida</string>
-    <string name="battery_health_good">Bom</string>
-    <string name="battery_health_overheat">Superaquecimento</string>
-    <string name="battery_health_dead">Morta</string>
-    <string name="battery_health_overvoltage">Sobretensão</string>
-    <string name="battery_health_failure">Falha Não Especificada</string>
-    <string name="battery_health_cold">Frio</string>
-    <string name="battery_health_unknown">Desconhecida</string>
-
-    <!-- Tecnologia da Bateria -->
-    <string name="battery_technology_unknown">Desconhecida</string>
-
-    <!-- Logs e Histórico -->
-    <string name="graph_status_empty">Nenhum dado de bateria registrado ainda.</string>
-    <string name="log_timestamp_format">dd/MM/yyyy HH:mm:ss</string>
-    <string name="log_entry_format">%1$d%% (%2$s)</string>
-    <string name="log_empty_message">Nenhum dado de histórico disponível.</string>
-
-    <!-- STRINGS ADICIONADAS PARA CORRIGIR O BUILD -->
-    <string name="graph_status_latest">Última leitura: %1$d%%, %2$s</string>
-    <string name="graph_no_data">Sem dados para exibir o gráfico</string>
+    <string name="health_unknown">Desconhecida</string>
 
 </resources>

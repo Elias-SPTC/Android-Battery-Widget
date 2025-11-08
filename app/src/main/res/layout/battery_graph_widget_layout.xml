@@ -4,29 +4,56 @@
     android:id="@+id/widget_graph_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="8dp"
-    android:background="@drawable/widget_background">
+    android:orientation="horizontal"
+    android:background="@drawable/widget_background_dark"
+    android:padding="8dp">
 
-    <!-- Área de Exibição Principal do Gráfico -->
-    <ImageView
-        android:id="@+id/iv_battery_graph"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:contentDescription="@string/graph_description"
-        android:scaleType="fitCenter"
-        tools:src="@tools:sample/backgrounds/scenic" />
+    <!-- Área principal para o nosso gráfico de barras simulado -->
+    <LinearLayout
+        android:id="@+id/bar_chart_container"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.7"
+        android:orientation="horizontal"
+        android:gravity="bottom">
 
-    <!-- Rodapé de Informações (opcional, para ser populado dinamicamente) -->
-    <TextView
-        android:id="@+id/tv_graph_footer_info"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:textSize="10sp"
-        android:textColor="@android:color/white"
-        android:gravity="center"
-        tools:text="Saúde: Boa | Temp: 25°C | Voltagem: 3.82V" />
+        <!-- 20 barras para representar o histórico. Serão controladas programaticamente. -->
+        <View android:id="@+id/bar_1" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good"/>
+        <View android:id="@+id/bar_2" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_3" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_4" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_5" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_6" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_7" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_8" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_9" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_10" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_11" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_12" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_13" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_14" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_15" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_16" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_17" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_18" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_19" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+        <View android:id="@+id/bar_20" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:background="@color/graph_line_good" android:layout_marginStart="2dp"/>
+
+    </LinearLayout>
+
+    <!-- Área lateral para dados não plotáveis -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.3"
+        android:orientation="vertical"
+        android:gravity="center_vertical"
+        android:paddingStart="8dp">
+
+        <TextView android:id="@+id/tv_current_level" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@android:color/white" android:textSize="22sp" android:textStyle="bold" tools:text="39%" />
+        <TextView android:id="@+id/tv_current_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@android:color/white" android:textSize="12sp" tools:text="Descarregando" />
+        <TextView android:id="@+id/tv_current_health" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textColor="@android:color/white" android:textSize="12sp" tools:text="Saúde: Boa" />
+
+    </LinearLayout>
 
 </LinearLayout>

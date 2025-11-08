@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_details_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@drawable/widget_background_dark">
+
+    <!-- Linha Nível -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <TextView android:text="Nível:" style="@style/DetailLabelStyle" android:textColor="@android:color/white"/>
+        <TextView android:id="@+id/tv_details_level" tools:text="29%" style="@style/DetailValueStyle" android:textColor="@android:color/white"/>
+    </LinearLayout>
+
+    <!-- Linha Status -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
+        <TextView android:text="Status:" style="@style/DetailLabelStyle" android:textColor="@android:color/white"/>
+        <TextView android:id="@+id/tv_details_status" tools:text="Carregando" style="@style/DetailValueStyle" android:textColor="@android:color/white"/>
+    </LinearLayout>
+
+    <!-- Linha Saúde -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
+        <TextView android:text="Saúde:" style="@style/DetailLabelStyle" android:textColor="@android:color/white"/>
+        <TextView android:id="@+id/tv_details_health" tools:text="Boa" style="@style/DetailValueStyle" android:textColor="@android:color/white"/>
+    </LinearLayout>
+
+    <!-- Linha Temperatura -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
+        <TextView android:text="Temperatura:" style="@style/DetailLabelStyle" android:textColor="@android:color/white"/>
+        <TextView android:id="@+id/tv_details_temp" tools:text="34.5°C" style="@style/DetailValueStyle" android:textColor="@android:color/white"/>
+    </LinearLayout>
+
+    <!-- Linha Voltagem -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
+        <TextView android:text="Voltagem:" style="@style/DetailLabelStyle" android:textColor="@android:color/white"/>
+        <TextView android:id="@+id/tv_details_voltage" tools:text="3.759 V" style="@style/DetailValueStyle" android:textColor="@android:color/white"/>
+    </LinearLayout>
+
+    <!-- Linha Fonte -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
+        <TextView android:text="Fonte:" style="@style/DetailLabelStyle" android:textColor="@android:color/white"/>
+        <TextView android:id="@+id/tv_details_plugged" tools:text="USB" style="@style/DetailValueStyle" android:textColor="@android:color/white"/>
+    </LinearLayout>
+
+    <!-- Linha Tecnologia -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
+        <TextView android:text="Tecnologia:" style="@style/DetailLabelStyle" android:textColor="@android:color/white"/>
+        <TextView android:id="@+id/tv_details_technology" tools:text="Li-ion" style="@style/DetailValueStyle" android:textColor="@android:color/white"/>
+    </LinearLayout>
+
+</LinearLayout>

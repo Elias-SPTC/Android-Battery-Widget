@@ -3,34 +3,24 @@ package com.em.batterywidget
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
-import android.content.Intent
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 
-class BatteryAppWidgetProvider : AppWidgetProvider(), KoinComponent {
-
-    private val widgetUpdater: WidgetUpdater by inject()
-
-    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        appWidgetIds.forEach { appWidgetId ->
-            widgetUpdater.updateWidget(context, appWidgetManager, appWidgetId)
-        }
-    }
-
-    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
-        widgetUpdater.deleteWidgetPreferences(appWidgetIds)
-    }
+/**
+ * Ponto de entrada ÚNICO para todos os widgets.
+ * Na nova arquitetura, sua única responsabilidade é receber eventos do sistema (como onUpdate)
+ * e delegar o trabalho pesado para o BatteryWorker, acionando-o sob demanda.
+ */
+class BatteryAppWidgetProvider : AppWidgetProvider() {
 
     /**
-     * CORRIGIDO: Recebe broadcasts para forçar a atualização dos widgets.
+     * Chamado pelo sistema quando é necessária uma atualização do widget (ex: na criação inicial).
+     * Ele simplesmente cria e enfileira uma tarefa única para o BatteryWorker fazer o trabalho.
      */
-    override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == BatteryWorker.ACTION_WIDGET_UPDATE) {
-            val appWidgetManager = AppWidgetManager.getInstance(context)
-            val componentName = android.content.ComponentName(context, BatteryAppWidgetProvider::class.java)
-            val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
-            onUpdate(context, appWidgetManager, appWidgetIds)
-        }
-        super.onReceive(context, intent) // Garante que o onUpdate também seja chamado se necessário
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        // Cria uma tarefa para ser executada imediatamente.
+        val workRequest = OneTimeWorkRequestBuilder<BatteryWorker>().build()
+        // Enfileira a tarefa.
+        WorkManager.getInstance(context).enqueue(workRequest)
     }
 }

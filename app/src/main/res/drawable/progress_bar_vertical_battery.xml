@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- A "casca" da bateria (fundo) - VERSÃO SIMPLES E SEGURA -->
+    <!-- Fundo (casca da pilha) -->
     <item android:id="@android:id/background">
         <shape android:shape="rectangle">
             <corners android:radius="5dp" />
-            <solid android:color="#4DFFFFFF" /> <!-- Cinza translúcido -->
+            <solid android:color="#4DFFFFFF" />
             <stroke android:width="1dp" android:color="#B3FFFFFF" />
         </shape>
     </item>
 
-    <!-- O preenchimento do progresso - VERSÃO SIMPLES E SEGURA -->
+    <!-- Progresso (preenchimento que cresce de baixo para cima) -->
     <item android:id="@android:id/progress">
-        <clip>
+        <clip
+            android:clipOrientation="vertical"
+            android:gravity="bottom">
             <shape android:shape="rectangle">
                 <corners android:radius="5dp" />
-                <solid android:color="#00E676" /> <!-- Verde sólido -->
+                <solid android:color="#00E676" />
             </shape>
         </clip>
     </item>

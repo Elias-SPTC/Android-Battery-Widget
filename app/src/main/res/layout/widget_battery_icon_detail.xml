@@ -1,42 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp">
 
-<!--
-IMPORTANTE: Tag raiz de LAYOUT. Não use <appwidget-provider> aqui!
-Isto resolve o erro 'Unable to parse "android.widget.appwidget-provider"'.
--->
-
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <RelativeLayout
-        android:id="@+id/widget_root_layout"
+    <!-- ProgressBar vertical para simular a pilha em pé -->
+    <ProgressBar
+        android:id="@+id/battery_progress_bar_vertical"
+        style="?android:attr/progressBarStyleHorizontal" 
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="4dp"
-        android:background="@drawable/widget_background_icon">
+        android:progressDrawable="@drawable/progress_bar_vertical_battery"
+        tools:progress="85" />
 
-        <!-- Seu conteúdo visual real do widget de ícone -->
-        <ImageView
-            android:id="@+id/battery_icon"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:src="@drawable/ic_battery_status"
-            android:contentDescription="@string/battery_level"
-            tools:src="@drawable/widget_icon_detail_preview"
-            />
+    <!-- Container para posicionar o texto e o raio -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
 
-        <!-- Texto que mostra a porcentagem da bateria -->
+        <!-- Texto da percentagem, colado em cima -->
         <TextView
             android:id="@+id/battery_level_text"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:textSize="10sp"
+            android:layout_alignParentTop="true"
+            android:gravity="center_horizontal"
+            android:textColor="@android:color/white"
+            android:textSize="22sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            tools:text="85" />
+            tools:text="85%" />
+
+        <!-- Raio, colado em baixo -->
+        <ImageView
+            android:id="@+id/charging_bolt_icon_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:src="@drawable/ic_charging_bolt"
+            android:scaleType="centerInside"
+            android:adjustViewBounds="true"
+            android:visibility="gone"
+            tools:visibility="visible"/>
 
     </RelativeLayout>
 
-
-</layout>
+</FrameLayout>

@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_text_container"
     android:layout_width="match_parent"
-    android:layout_height="50dp"
+    android:layout_height="40dp" 
     android:background="@drawable/widget_background_dark">
 
     <!-- Barra de Progresso estilizada como uma pilha -->
@@ -20,8 +20,8 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp">
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp">
 
         <!-- Ícone de Raio, alinhado à esquerda -->
         <ImageView
@@ -32,7 +32,6 @@
             android:src="@drawable/ic_charging_bolt"
             android:adjustViewBounds="true"
             android:scaleType="centerInside"
-            android:padding="8dp"
             android:visibility="gone"
             tools:visibility="visible" />
 
@@ -44,7 +43,7 @@
             android:layout_alignParentEnd="true"
             android:gravity="center_vertical|end"
             android:textColor="#FFFFFFFF"
-            android:textSize="24sp" 
+            android:textSize="22sp" 
             android:textStyle="bold"
             tools:text="85%" />
 

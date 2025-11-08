@@ -5,15 +5,13 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
+import android.graphics.Color
 import android.os.BatteryManager
-import android.view.View
 import android.widget.RemoteViews
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.first // <-- IMPORT ADICIONADO
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -35,30 +33,35 @@ class BatteryGraphWidget : AppWidgetProvider(), KoinComponent {
 
     private fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
         coroutineScope.launch {
-            // CORRIGIDO: Usa o nome de método correto que existe no repositório.
-            val history = repository.getHistory().first()
+            val history = repository.getHistory().first().take(20)
             val latestLog = repository.getLatestBatteryLog().first()
-
-            val graphBitmap = drawGraphToBitmap(context, history)
 
             CoroutineScope(Dispatchers.Main).launch {
                 val views = RemoteViews(context.packageName, R.layout.battery_graph_widget_layout)
 
-                views.setImageViewBitmap(R.id.iv_battery_graph, graphBitmap)
-
                 if (latestLog != null) {
-                    val statusText = getStatusString(context, latestLog.status, latestLog.plugged)
-                    views.setTextViewText(R.id.tv_graph_footer_info, context.getString(R.string.graph_status_latest, latestLog.level, statusText))
+                    views.setTextViewText(R.id.tv_current_level, "${latestLog.level}%")
+                    views.setTextViewText(R.id.tv_current_status, getStatusString(context, latestLog.status))
+                    views.setTextViewText(R.id.tv_current_health, "Saúde: ${getHealthString(context, latestLog.health)}")
                 } else {
-                    views.setTextViewText(R.id.tv_graph_footer_info, context.getString(R.string.graph_no_data))
+                    views.setTextViewText(R.id.tv_current_level, "N/A")
+                    views.setTextViewText(R.id.tv_current_status, "Sem dados")
                 }
 
-                val intent = Intent(context, WidgetActivity::class.java).apply {
-                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-                    action = "graph_widget_click_$appWidgetId"
+                val barIds = getBarIds()
+                for (i in 0 until barIds.size) {
+                    val barId = barIds[i]
+                    if (i < history.size) {
+                        val log = history[i]
+                        val barColor = if (log.level <= 20) Color.RED else Color.parseColor("#4CAF50")
+                        views.setInt(barId, "setBackgroundColor", barColor)
+                    } else {
+                        views.setInt(barId, "setBackgroundColor", Color.TRANSPARENT)
+                    }
                 }
+
+                val intent = Intent(context, MainActivity::class.java)
                 val pendingIntent = PendingIntent.getActivity(context, appWidgetId, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-                
                 views.setOnClickPendingIntent(R.id.widget_graph_container, pendingIntent)
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)
@@ -66,38 +69,30 @@ class BatteryGraphWidget : AppWidgetProvider(), KoinComponent {
         }
     }
 
-    private fun drawGraphToBitmap(context: Context, history: List<BatteryLog>): Bitmap {
-        val width = 500
-        val height = 250
-        val graphView = BatteryGraphView(context).apply {
-            setHistoryData(history)
-        }
-        graphView.measure(
-            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+    private fun getBarIds(): IntArray {
+        return intArrayOf(
+            R.id.bar_1, R.id.bar_2, R.id.bar_3, R.id.bar_4, R.id.bar_5, R.id.bar_6, R.id.bar_7, R.id.bar_8, R.id.bar_9, R.id.bar_10,
+            R.id.bar_11, R.id.bar_12, R.id.bar_13, R.id.bar_14, R.id.bar_15, R.id.bar_16, R.id.bar_17, R.id.bar_18, R.id.bar_19, R.id.bar_20
         )
-        graphView.layout(0, 0, width, height)
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        graphView.draw(canvas)
-        return bitmap
     }
-
-    private fun getStatusString(context: Context, status: Int, plugged: Int): String {
-        val statusResource = when (status) {
-            BatteryManager.BATTERY_STATUS_CHARGING -> {
-                when (plugged) {
-                    BatteryManager.BATTERY_PLUGGED_USB -> R.string.status_charging_usb
-                    BatteryManager.BATTERY_PLUGGED_AC -> R.string.status_charging_ac
-                    BatteryManager.BATTERY_PLUGGED_WIRELESS -> R.string.status_charging_wireless
-                    else -> R.string.status_charging
-                }
-            }
-            BatteryManager.BATTERY_STATUS_DISCHARGING -> R.string.status_discharging
-            BatteryManager.BATTERY_STATUS_NOT_CHARGING -> R.string.status_not_charging
-            BatteryManager.BATTERY_STATUS_FULL -> R.string.status_full
-            else -> R.string.status_unknown
+    
+    private fun getStatusString(context: Context, status: Int): String { 
+        return when (status) {
+            BatteryManager.BATTERY_STATUS_CHARGING -> "Carregando"
+            BatteryManager.BATTERY_STATUS_DISCHARGING -> "Descarregando"
+            BatteryManager.BATTERY_STATUS_FULL -> "Completa"
+            BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "Não Carrega"
+            else -> "Desconhecido"
         }
-        return context.getString(statusResource)
-    }
+     }
+    private fun getHealthString(context: Context, health: Int): String { 
+        return when (health) {
+            BatteryManager.BATTERY_HEALTH_GOOD -> "Boa"
+            BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Superaquecida"
+            BatteryManager.BATTERY_HEALTH_DEAD -> "Morta"
+            BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Sobretensão"
+            BatteryManager.BATTERY_HEALTH_COLD -> "Fria"
+            else -> "Desconhecida"
+        }
+     }
 }

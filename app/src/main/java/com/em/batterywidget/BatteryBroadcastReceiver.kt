@@ -19,17 +19,16 @@ class BatteryBroadcastReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
-            // Quando o telemóvel reinicia, a App agenda o trabalho periódico novamente.
-            // Esta lógica já está na classe App, então o BOOT_COMPLETED no manifesto garante que a App seja iniciada.
             Intent.ACTION_BOOT_COMPLETED -> {
-                Log.d(TAG, "Dispositivo reiniciado. O trabalho periódico será reagendado pela classe App.")
-                // A classe App cuidará do agendamento.
+                Log.d(TAG, "Dispositivo reiniciado. A classe App irá reagendar o trabalho periódico.")
+                // A classe App cuida do agendamento periódico.
             }
 
-            // Quando o carregador é conectado ou desconectado, queremos uma atualização IMEDIATA.
+            // Eventos que exigem uma atualização imediata.
             Intent.ACTION_POWER_CONNECTED,
-            Intent.ACTION_POWER_DISCONNECTED -> {
-                Log.d(TAG, "Carregador conectado/desconectado. Acionando atualização imediata.")
+            Intent.ACTION_POWER_DISCONNECTED,
+            Intent.ACTION_BATTERY_CHANGED -> {
+                Log.d(TAG, "Evento de bateria recebido (${intent.action}). Acionando o Worker.")
                 // Cria e enfileira um pedido de trabalho único para ser executado agora.
                 val oneTimeWorkRequest = OneTimeWorkRequestBuilder<BatteryWorker>().build()
                 WorkManager.getInstance(context).enqueue(oneTimeWorkRequest)

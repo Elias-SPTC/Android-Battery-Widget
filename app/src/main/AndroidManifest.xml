@@ -2,11 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Permissão para reagir ao boot e reiniciar o monitoramento -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:name=".App" 
+        android:name=".App"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -17,7 +16,6 @@
         android:theme="@style/Theme.BatteryWidget"
         tools:targetApi="31">
 
-        <!-- Atividade Principal (Launcher) -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -27,7 +25,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Atividade de Configuração do Widget -->
         <activity
             android:name=".WidgetActivity"
             android:exported="true"
@@ -37,10 +34,11 @@
             </intent-filter>
         </activity>
 
-        <!-- Provedor para os Widgets Simples (Ícone, Texto) -->
+        <!-- CORRIGIDO: ÚNICO PONTO DE ENTRADA PARA TODOS OS WIDGETS -->
         <receiver
-            android:name=".BatteryWidgetProvider"
-            android:exported="false">
+            android:name=".BatteryAppWidgetProvider"
+            android:exported="true" 
+            android:label="Battery Widget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -49,19 +47,8 @@
                 android:resource="@xml/battery_widget_info" />
         </receiver>
 
-        <!-- Provedor para o Widget de Gráfico -->
-        <receiver
-            android:name=".BatteryGraphWidgetProvider"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/battery_graph_widget_info" />
-        </receiver>
+        <!-- O provider do gráfico foi removido para consolidar a lógica e remover a entrada duplicada. -->
         
-        <!-- Nosso BroadcastReceiver principal para capturar o estado da bateria -->
         <receiver
             android:name=".BatteryBroadcastReceiver"
             android:exported="true">
