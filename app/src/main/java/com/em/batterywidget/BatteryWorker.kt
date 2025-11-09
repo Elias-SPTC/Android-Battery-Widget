@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.flow.first
@@ -22,25 +23,35 @@ class BatteryWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            val latestLog = getBatteryLog(applicationContext) ?: return Result.failure()
-            repository.addBatteryLog(latestLog)
+            val latestLog = getBatteryLog(applicationContext)
+            if (latestLog != null) {
+                repository.addBatteryLog(latestLog)
+            }
             updateAllWidgets(applicationContext)
             Result.success()
         } catch (e: Exception) {
-            Result.retry()
+            Log.e("BatteryWorker", "Erro fatal no doWork", e)
+            Result.failure()
         }
     }
 
     private suspend fun updateAllWidgets(context: Context) {
         val appWidgetManager = AppWidgetManager.getInstance(context)
-        val iconWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, BatteryAppWidgetProvider::class.java))
         
-        iconWidgetIds.forEach { widgetId ->
-            widgetUpdater.updateWidget(context, appWidgetManager, widgetId)
+        val tableWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, BatteryAppWidgetProvider::class.java))
+        val graphWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, BatteryGraphWidgetProvider::class.java))
+        val iconWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, BatteryIconWidgetProvider::class.java))
+        val textWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, BatteryTextWidgetProvider::class.java))
+
+        (tableWidgetIds + graphWidgetIds + iconWidgetIds + textWidgetIds).forEach { widgetId ->
+            try {
+                widgetUpdater.updateWidget(context, appWidgetManager, widgetId)
+            } catch (e: Exception) {
+                Log.e("BatteryWorker", "Falha ao atualizar o widget ID $widgetId", e)
+            }
         }
     }
 
-    // CORRIGIDO: Usa apenas o Intent "sticky" para garantir consistência de dados.
     private fun getBatteryLog(context: Context): BatteryLog? {
         val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         if (intent == null) return null

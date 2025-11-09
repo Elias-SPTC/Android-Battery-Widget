@@ -4,25 +4,27 @@ import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.work.OneTimeWorkRequestBuilder // <-- IMPORT ADICIONADO
-import androidx.work.WorkManager             // <-- IMPORT ADICIONADO
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import com.em.batterywidget.databinding.ActivityWidgetConfigurationBinding
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class WidgetActivity : AppCompatActivity(), KoinComponent {
 
+    private lateinit var binding: ActivityWidgetConfigurationBinding
     private val repository: BatteryRepository by inject()
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        binding = ActivityWidgetConfigurationBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         setResult(Activity.RESULT_CANCELED)
-        setContentView(R.layout.activity_widget_configuration)
 
         appWidgetId = intent?.extras?.getInt(
             AppWidgetManager.EXTRA_APPWIDGET_ID,
@@ -34,20 +36,21 @@ class WidgetActivity : AppCompatActivity(), KoinComponent {
             return
         }
 
-        findViewById<View>(R.id.btn_configure_standing_battery).setOnClickListener {
-            configureWidget(WidgetUpdater.TYPE_ICON_DETAIL)
+        // CORRIGIDO: Usa as constantes do objeto WidgetType
+        binding.btnConfigureStandingBattery.setOnClickListener {
+            configureWidget(WidgetType.TYPE_ICON_DETAIL)
         }
         
-        findViewById<View>(R.id.btn_configure_lying_battery).setOnClickListener {
-            configureWidget(WidgetUpdater.TYPE_TEXT_ONLY)
+        binding.btnConfigureLyingBattery.setOnClickListener {
+            configureWidget(WidgetType.TYPE_TEXT_ONLY)
         }
 
-        findViewById<View>(R.id.btn_configure_details_table).setOnClickListener {
-            configureWidget(WidgetUpdater.TYPE_DETAILS_TABLE)
+        binding.btnConfigureDetailsTable.setOnClickListener {
+            configureWidget(WidgetType.TYPE_DETAILS_TABLE)
         }
 
-        findViewById<View>(R.id.btn_configure_graph).setOnClickListener {
-            configureWidget(WidgetUpdater.TYPE_GRAPH)
+        binding.btnConfigureGraph.setOnClickListener {
+            configureWidget(WidgetType.TYPE_GRAPH)
         }
     }
 
@@ -60,7 +63,6 @@ class WidgetActivity : AppCompatActivity(), KoinComponent {
             }
             setResult(Activity.RESULT_OK, resultValue)
             
-            // Força a primeira atualização
             val workRequest = OneTimeWorkRequestBuilder<BatteryWorker>().build()
             WorkManager.getInstance(applicationContext).enqueue(workRequest)
 

@@ -9,6 +9,7 @@
     <string name="battery_level">Nível da Bateria</string>
     <string name="widget_graph_history_description">Widget com gráfico do histórico.</string>
     <string name="widget_icon_detail_description">Widget de ícone com detalhes.</string>
+    <string name="widget_text_only_description">Widget de bateria apenas com texto</string>
     
     <!-- STRINGS DE FREQUÊNCIA ADICIONADAS -->
     <string name="freq_5_minutes">5 Minutos</string>
@@ -30,5 +31,7 @@
     <string name="health_over_voltage">Sobretensão</string>
     <string name="health_cold">Fria</string>
     <string name="health_unknown">Desconhecida</string>
+
+    <string name="no_data_available">Sem dados disponíveis</string>
 
 </resources>

@@ -29,8 +29,10 @@ val appModule = module {
     // Definição de como criar o BatteryRepository (Singleton)
     single { BatteryRepository(get(), get()) }
 
-    // Definição de como criar o BatteryViewModel
+    // Definição de como criar o BatteryViewModel (Mantido para compatibilidade, se necessário)
     viewModel { BatteryViewModel(get(), get()) }
+
+    // A definição para o MainViewModel foi removida.
 
     // Definição de como criar o WidgetUpdater (Singleton)
     single { WidgetUpdater }

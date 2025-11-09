@@ -1,11 +1,10 @@
 package com.em.batterywidget
 
 import android.app.Application
-import android.content.Intent
-import android.os.Build
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import org.koin.android.ext.koin.androidContext
@@ -24,32 +23,26 @@ class App : Application() {
 
         scheduleBatteryWorker()
         
-        // CORRIGIDO: Inicia o serviço de monitoramento em primeiro plano
-        startMonitorService()
+        // A chamada para startMonitorService() foi REMOVIDA para consertar o crash na inicialização.
     }
 
     private fun scheduleBatteryWorker() {
+        val workManager = WorkManager.getInstance(this)
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
             .build()
 
-        val workRequest = PeriodicWorkRequestBuilder<BatteryWorker>(
+        val initialWorkRequest = OneTimeWorkRequestBuilder<BatteryWorker>().build()
+
+        val periodicWorkRequest = PeriodicWorkRequestBuilder<BatteryWorker>(
             15, TimeUnit.MINUTES
         ).setConstraints(constraints).build()
 
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+        workManager.enqueue(initialWorkRequest)
+        workManager.enqueueUniquePeriodicWork(
             "BatteryUpdateWork",
             ExistingPeriodicWorkPolicy.KEEP,
-            workRequest
+            periodicWorkRequest
         )
-    }
-
-    private fun startMonitorService() {
-        val serviceIntent = Intent(this, BatteryMonitorService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent)
-        } else {
-            startService(serviceIntent)
-        }
     }
 }

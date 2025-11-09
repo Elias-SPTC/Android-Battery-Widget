@@ -1,28 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto" 
-    android:id="@+id/widget_graph_container"
+<!--
+ARQUIVO CORRIGIDO
+- Substituído o BatteryGraphView por um ImageView simples, que é a forma correta de exibir gráficos em widgets.
+- Adicionados os IDs que o WidgetUpdater espera encontrar (widget_graph_root, graph_image_view, graph_title).
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_graph_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="8dp"
-    android:background="@drawable/widget_background">
-
-    <com.em.batterywidget.BatteryGraphView
-        android:id="@+id/battery_graph_view"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+    android:background="@drawable/widget_background"
+    android:padding="16dp">
 
     <TextView
-        android:id="@+id/tv_graph_footer_info"
-        android:layout_width="match_parent"
+        android:id="@+id/graph_title"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:textSize="10sp"
+        android:layout_gravity="top|center_horizontal"
+        android:text="Histórico de Bateria"
         android:textColor="@android:color/white"
-        android:gravity="center"
-        tools:text="Saúde: Boa | Temp: 25°C" />
+        android:textSize="14sp" />
 
-</LinearLayout>
+    <ImageView
+        android:id="@+id/graph_image_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="24dp" 
+        android:scaleType="fitCenter"
+        android:contentDescription="Gráfico do histórico de bateria" />
+
+</FrameLayout>

@@ -5,26 +5,17 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Selecione o tipo de widget"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp"/>
-
-    <!-- Botões Renomeados e Adicionados -->
     <Button
         android:id="@+id/btn_configure_standing_battery"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Pilha em Pé (Ícone)" />
+        android:text="Bateria em Pé (Ícone)" />
 
     <Button
         android:id="@+id/btn_configure_lying_battery"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Pilha Deitada (Texto)" />
+        android:text="Bateria Deitada (Texto)" />
 
     <Button
         android:id="@+id/btn_configure_details_table"
@@ -36,6 +27,6 @@
         android:id="@+id/btn_configure_graph"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Gráfico Detalhado" />
+        android:text="Gráfico de Histórico" />
 
 </LinearLayout>

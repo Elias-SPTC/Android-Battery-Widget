@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- CORRIGIDO: Removido o atributo android:configure para evitar chamar a Activity de configuração. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="250dp"
     android:minHeight="110dp"
     android:updatePeriodMillis="1800000"
-    android:initialLayout="@layout/battery_graph_widget_layout"
-    android:previewImage="@drawable/graph_widget_preview"
+    android:initialLayout="@layout/widget_battery_graph_history"
+    android:previewImage="@drawable/widget_graph_history_preview"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
-    android:widgetFeatures="reconfigurable"
-    android:configure="com.em.batterywidget.WidgetActivity"
-    android:initialKeyguardLayout="@layout/battery_graph_widget_layout">
+    android:initialKeyguardLayout="@layout/widget_battery_graph_history">
 </appwidget-provider>

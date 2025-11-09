@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_text_container"
     android:layout_width="match_parent"
-    android:layout_height="40dp" 
+    android:layout_height="match_parent"
     android:background="@drawable/widget_background_dark">
 
     <!-- Barra de Progresso estilizada como uma pilha -->
@@ -13,40 +13,28 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:progressDrawable="@drawable/progress_bar_horizontal_battery"
+        android:progressDrawable="@drawable/progress_bar_horizontal_battery_gradient"
         tools:progress="85" />
 
-    <!-- Container Relativo para alinhar o raio e o texto -->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp">
+    <!-- Texto da Porcentagem, centralizado sobre a barra -->
+    <TextView
+        android:id="@+id/text_level_only"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textColor="#FFFFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        tools:text="85%" />
 
-        <!-- Ícone de Raio, alinhado à esquerda -->
-        <ImageView
-            android:id="@+id/charging_bolt_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_alignParentStart="true"
-            android:src="@drawable/ic_charging_bolt"
-            android:adjustViewBounds="true"
-            android:scaleType="centerInside"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <!-- Texto da Porcentagem, alinhado à direita -->
-        <TextView
-            android:id="@+id/battery_level_text_only"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_alignParentEnd="true"
-            android:gravity="center_vertical|end"
-            android:textColor="#FFFFFFFF"
-            android:textSize="22sp" 
-            android:textStyle="bold"
-            tools:text="85%" />
-
-    </RelativeLayout>
+    <!-- Ícone de Raio, sobreposto e inicialmente invisível -->
+    <ImageView
+        android:id="@+id/charging_bolt_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_charging_bolt"
+        android:visibility="gone"
+        tools:visibility="visible" />
 
 </FrameLayout>
